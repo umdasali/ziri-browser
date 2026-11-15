@@ -1,0 +1,49 @@
+APP NAME
+Ziri Browser
+
+SHORT DESCRIPTION (max 80)
+Private browser with ad blocking, Tor tabs, a password vault and video player.
+
+FULL DESCRIPTION (max 4000)
+Ziri Browser is a fast, private web browser for Android that keeps what you do on your phone, on your phone. There are no accounts, no ads, no analytics and no crash reporting. The developer collects nothing.
+
+PRIVACY BY DEFAULT
+• Ad and tracker blocking, with a count of what was blocked on each page and a per-site switch
+• Protection against browser fingerprinting, so sites find it harder to recognise your device
+• Tor tabs: open a tab that sends its traffic through the Tor network
+• Private tabs that keep no history, cache or saved logins
+• HTTPS-first browsing, with an optional HTTPS-only mode and a warning before any insecure page
+• Tracking parameters (such as utm_ and fbclid) are removed from links you open
+• Third-party cookies blocked, plus Do Not Track and Global Privacy Control signals
+
+PASSWORD MANAGER
+• Save logins when you sign in, and fill them with one tap
+• Encrypted with a key held in your phone's secure hardware
+• Unlock with your fingerprint, face or screen lock
+• Fills only on the exact website a login was saved for
+• Import and export in the common CSV format
+• Passwords stay on your device; they are never uploaded
+
+READER VIEW
+Turn any article into a clean page without clutter. Choose text size, serif or sans-serif, and light, sepia or dark.
+
+BUILT-IN VIDEO PLAYER AND DOWNLOADS
+• Swipe to seek, change brightness and volume; double-tap to skip 10 seconds
+• Playback speed, subtitles, audio tracks, sleep timer and picture-in-picture
+• Remembers where you stopped watching
+• Download manager and file manager for the things you save
+
+MADE FOR EVERYDAY USE
+• Tabs, bookmarks, history, quick-access tiles and find in page
+• Desktop-site mode and adjustable text size
+• Colour themes with light and dark modes
+• 22 languages, including right-to-left languages such as Arabic, Urdu and Persian
+
+HONEST ABOUT LIMITS
+Ziri reduces tracking and fingerprinting; it cannot make you anonymous on its own. Tor tabs are slower than normal tabs and some websites work less well when protections are on. Sync across devices and page translation are not available yet.
+
+PERMISSIONS
+Camera, microphone and location are used only when a website asks and you allow it. Media access lets the player and file manager list and play your files. Notifications show download progress and playback controls.
+
+Privacy policy: https://umdasali.github.io/ziri-browser/privacy.html
+Contact: ziriverse@gmail.com

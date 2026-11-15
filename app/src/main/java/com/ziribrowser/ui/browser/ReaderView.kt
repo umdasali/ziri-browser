@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
@@ -79,7 +80,7 @@ fun ReaderView(container: AppContainer, article: Article, isPrivate: Boolean, on
 
     Box(Modifier.fillMaxSize().background(bg)) {
         AndroidView(
-            modifier = Modifier.fillMaxSize().statusBarsPadding(),
+            modifier = Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding(),
             factory = { ctx ->
                 WebView(ctx).apply {
                     if (isPrivate) PrivateProfile.apply(this)
@@ -122,10 +123,14 @@ fun ReaderView(container: AppContainer, article: Article, isPrivate: Boolean, on
         )
 
         // Close, and the reading controls, floating over the article.
-        GlassSurface(
+        // Coloured from the reader's own theme (not the app's), so the icons stay readable when a light article is shown in a dark app.
+        val barFg = if (theme == 2) Color(0xFFEAEAEA) else Color(0xFF1B1B1F)
+        val barBg = when (theme) { 1 -> Color(0xFFE9DDBF); 2 -> Color(0xFF2A2D31); else -> Color(0xFFF1F3F4) }
+        androidx.compose.material3.Surface(
             Modifier.align(Alignment.BottomCenter).windowInsetsPadding(WindowInsets.navigationBars).padding(horizontal = 14.dp, vertical = 10.dp),
-            shape = CircleShape, strong = true,
+            shape = CircleShape, color = barBg, shadowElevation = 8.dp,
         ) {
+          androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides barFg) {
             Row(Modifier.padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton({ scope.launch { s.setReaderSize(size - 10) } }, enabled = size > 80) { Icon(Icons.Rounded.TextDecrease, stringResource(R.string.reader_smaller)) }
                 IconButton({ scope.launch { s.setReaderSize(size + 10) } }, enabled = size < 200) { Icon(Icons.Rounded.TextIncrease, stringResource(R.string.reader_larger)) }
@@ -135,6 +140,7 @@ fun ReaderView(container: AppContainer, article: Article, isPrivate: Boolean, on
                 }
                 IconButton(onClose) { Icon(Icons.Rounded.Close, stringResource(R.string.reader_close)) }
             }
+          }
         }
     }
 }
