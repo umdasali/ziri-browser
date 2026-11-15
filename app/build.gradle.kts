@@ -34,10 +34,12 @@ android {
         }
     }
 
-    // One smaller APK per phone type instead of one 37 MB APK that carries Tor for all four (an app bundle does this itself).
+    // One smaller APK per phone type instead of one 37 MB APK that carries Tor for all four. An app bundle does this itself and
+    // cannot be built while this is on ("multiple shrunk-resources files"), so it is switched off for bundle builds.
+    val buildingBundle = gradle.startParameter.taskNames.any { it.contains("bundle", ignoreCase = true) }
     splits {
         abi {
-            isEnable = true
+            isEnable = !buildingBundle
             reset()
             include("arm64-v8a", "armeabi-v7a", "x86_64", "x86")
             isUniversalApk = false
