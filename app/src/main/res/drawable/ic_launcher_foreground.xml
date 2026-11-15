@@ -1,0 +1,23 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Frosted orbit ring: a nod to a globe / browser. Kept inside the 66dp adaptive-icon safe zone. -->
+    <path
+        android:pathData="M24,54 a30,30 0 1,0 60,0 a30,30 0 1,0 -60,0"
+        android:strokeWidth="2.5"
+        android:strokeColor="#66FFFFFF"
+        android:strokeLineCap="round" />
+    <!-- Bold rounded "Z". -->
+    <path
+        android:pathData="M40,41 L68,41 L40,67 L68,67"
+        android:strokeWidth="8"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- Small highlight dot on the ring. -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M69.5,31 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0" />
+</vector>

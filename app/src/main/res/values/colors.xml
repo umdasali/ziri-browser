@@ -1,0 +1,4 @@
+<resources>
+    <!-- Match the app's default (teal) theme backgrounds so the first frame never flashes. -->
+    <color name="window_background">#F9FCFC</color>
+</resources>
