@@ -624,4 +624,5 @@
     <string name="reader_close">Okuma görünümünü kapat</string>
     <string name="pw_promise">Kayıtlı parolalar, bu telefonun güvenli donanımında tutulan bir anahtarla mühürlenir ve hiçbir yere gönderilmez.</string>
     <string name="reader_credit">Okuma görünümü Mozilla\'nın Readability kitaplığını (Apache 2.0) kullanır.</string>
+    <string name="privacy_policy">Gizlilik politikası</string>
 </resources>

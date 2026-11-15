@@ -624,4 +624,6 @@
     <string name="reader_close">Close reader view</string>
     <string name="pw_promise">Saved passwords are sealed with a key kept in this phone\'s secure hardware and are never sent anywhere.</string>
     <string name="reader_credit">Reader view uses Mozilla\'s Readability library (Apache 2.0).</string>
+    <string name="privacy_policy">Privacy policy</string>
+    <string name="privacy_policy_url" translatable="false">https://umdasali.github.io/ziri-browser/privacy.html</string>
 </resources>

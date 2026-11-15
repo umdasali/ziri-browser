@@ -289,6 +289,15 @@ private fun AboutPage(onBack: () -> Unit) {
                 Text(stringResource(R.string.browse_download_enjoy), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
+        val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+        val policyUrl = stringResource(R.string.privacy_policy_url)
+        SettingsCard {
+            Text(
+                stringResource(R.string.privacy_policy),
+                Modifier.fillMaxWidth().clickable(role = androidx.compose.ui.semantics.Role.Button) { runCatching { uriHandler.openUri(policyUrl) } }.padding(16.dp),
+                style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary,
+            )
+        }
         SectionLabel(stringResource(R.string.notes))
         SettingsCard {
             Text(

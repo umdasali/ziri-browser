@@ -637,4 +637,5 @@
     <string name="reader_theme">تغيير الألوان</string>
     <string name="reader_unavailable">وضع القراءة غير متاح لهذه الصفحة</string>
     <string name="reader_view">وضع القراءة</string>
+    <string name="privacy_policy">سياسة الخصوصية</string>
 </resources>

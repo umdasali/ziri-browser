@@ -624,4 +624,5 @@
     <string name="reader_close">வாசிப்புக் காட்சியை மூடு</string>
     <string name="pw_promise">சேமித்த கடவுச்சொற்கள் இந்தத் தொலைபேசியின் பாதுகாப்பான ஹார்டுவேரில் வைக்கப்பட்ட சாவியால் மூடப்பட்டுள்ளன, அவை எங்கும் அனுப்பப்படுவதில்லை.</string>
     <string name="reader_credit">வாசிப்புக் காட்சி Mozilla இன் Readability நூலகத்தைப் பயன்படுத்துகிறது (Apache 2.0).</string>
+    <string name="privacy_policy">தனியுரிமைக் கொள்கை</string>
 </resources>

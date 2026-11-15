@@ -624,4 +624,5 @@
     <string name="reader_theme">Farben ändern</string>
     <string name="reader_unavailable">Die Leseansicht ist für diese Seite nicht verfügbar</string>
     <string name="reader_view">Leseansicht</string>
+    <string name="privacy_policy">Datenschutzerklärung</string>
 </resources>

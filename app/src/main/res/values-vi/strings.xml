@@ -621,4 +621,5 @@
     <string name="reader_close">Đóng chế độ đọc</string>
     <string name="pw_promise">Mật khẩu đã lưu được niêm phong bằng khóa nằm trong phần cứng bảo mật của điện thoại này và không bao giờ được gửi đi đâu cả.</string>
     <string name="reader_credit">Chế độ đọc dùng thư viện Readability của Mozilla (Apache 2.0).</string>
+    <string name="privacy_policy">Chính sách quyền riêng tư</string>
 </resources>

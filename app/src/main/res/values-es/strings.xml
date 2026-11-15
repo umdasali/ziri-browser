@@ -627,4 +627,5 @@
     <string name="reader_close">Cerrar vista de lectura</string>
     <string name="pw_promise">Las contraseñas guardadas se protegen con una clave almacenada en el hardware seguro de este teléfono y nunca se envían a ningún sitio.</string>
     <string name="reader_credit">La vista de lectura usa la biblioteca Readability de Mozilla (Apache 2.0).</string>
+    <string name="privacy_policy">Política de privacidad</string>
 </resources>

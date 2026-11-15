@@ -627,4 +627,5 @@
     <string name="reader_close">Chiudi modalità lettura</string>
     <string name="pw_promise">Le password salvate sono protette con una chiave conservata nell\'hardware sicuro di questo telefono e non vengono mai inviate da nessuna parte.</string>
     <string name="reader_credit">La modalità lettura usa la libreria Readability di Mozilla (Apache 2.0).</string>
+    <string name="privacy_policy">Informativa sulla privacy</string>
 </resources>

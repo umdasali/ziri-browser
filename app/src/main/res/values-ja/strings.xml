@@ -621,4 +621,5 @@
     <string name="reader_close">リーダービューを閉じる</string>
     <string name="pw_promise">保存したパスワードは、このスマートフォンのセキュアハードウェアに保管されたキーで保護され、どこにも送信されません。</string>
     <string name="reader_credit">リーダービューは、MozillaのReadabilityライブラリ（Apache 2.0）を使用しています。</string>
+    <string name="privacy_policy">プライバシーポリシー</string>
 </resources>

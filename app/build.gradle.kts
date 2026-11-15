@@ -15,8 +15,8 @@ android {
         // 29+ so downloads use scoped storage (MediaStore) instead of legacy storage permissions.
         minSdk = 29
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.1.1"
     }
 
     // Release signing: put the details in keystore.properties (kept out of git, see keystore.properties.example).
@@ -34,12 +34,14 @@ android {
         }
     }
 
-    // One smaller APK per phone type instead of one 37 MB APK that carries Tor for all four. An app bundle does this itself and
-    // cannot be built while this is on ("multiple shrunk-resources files"), so it is switched off for bundle builds.
-    val buildingBundle = gradle.startParameter.taskNames.any { it.contains("bundle", ignoreCase = true) }
+    // Per-phone-type APKs (about 16 MB each instead of one 37 MB APK that carries Tor for all four) are opt-in:
+    //   ./gradlew assembleRelease -PabiSplits=true
+    // They stay off by default because an app bundle (for Google Play) does this splitting itself and cannot be built
+    // while splits are on, and switching between the two without a clean build leaves stale files behind.
+    val abiSplits = providers.gradleProperty("abiSplits").orNull == "true"
     splits {
         abi {
-            isEnable = !buildingBundle
+            isEnable = abiSplits
             reset()
             include("arm64-v8a", "armeabi-v7a", "x86_64", "x86")
             isUniversalApk = false

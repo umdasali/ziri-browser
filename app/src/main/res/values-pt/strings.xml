@@ -627,4 +627,5 @@
     <string name="reader_theme">Alterar cores</string>
     <string name="reader_unavailable">O modo leitura não está disponível para esta página</string>
     <string name="reader_view">Modo leitura</string>
+    <string name="privacy_policy">Política de privacidade</string>
 </resources>

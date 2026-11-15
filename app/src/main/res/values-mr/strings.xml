@@ -624,4 +624,5 @@
     <string name="reader_close">रीडर व्ह्यू बंद करा</string>
     <string name="pw_promise">सेव्ह केलेले पासवर्ड या फोनच्या सुरक्षित हार्डवेअरमध्ये ठेवलेल्या कीने सीलबंद केले जातात आणि कुठेही पाठवले जात नाहीत.</string>
     <string name="reader_credit">रीडर व्ह्यू Mozilla ची Readability लायब्ररी (Apache 2.0) वापरते.</string>
+    <string name="privacy_policy">गोपनीयता धोरण</string>
 </resources>

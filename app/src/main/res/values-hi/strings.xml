@@ -624,4 +624,5 @@
     <string name="reader_theme">रंग बदलें</string>
     <string name="reader_unavailable">इस पेज के लिए रीडर व्यू उपलब्ध नहीं है</string>
     <string name="reader_view">रीडर व्यू</string>
+    <string name="privacy_policy">गोपनीयता नीति</string>
 </resources>
