@@ -639,4 +639,13 @@
     <string name="brown">பழுப்பு</string>
     <string name="bookmark_added">புக்மார்க் சேர்க்கப்பட்டது</string>
     <string name="web_address">இணைய முகவரி</string>
+    <string name="gestures">சைகைகள்</string>
+    <string name="pull_to_refresh">இழுத்து புதுப்பி</string>
+    <string name="pull_to_refresh_desc">பக்கத்தின் மேலே கீழ்நோக்கி இழுத்து மீண்டும் ஏற்றவும்</string>
+    <string name="clear_on_exit">வெளியேறும்போது அழி</string>
+    <string name="clear_on_exit_desc">Ziri-ஐ மூடும் ஒவ்வொரு முறையும் நீக்கப்படும் (ஆப் ஸ்வைப் செய்து மூடப்பட்டால் அடுத்த தொடக்கத்தில்)</string>
+    <string name="search_tabs">தாவல்களைத் தேடு</string>
+    <string name="close_other_tabs">மற்ற தாவல்களை மூடு</string>
+    <string name="no_matching_tabs">பொருந்தும் தாவல் இல்லை</string>
+    <string name="print_page">அச்சிடு / PDF ஆக சேமி</string>
 </resources>

@@ -88,6 +88,7 @@ import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.Print
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.ui.focus.focusRequester
@@ -247,11 +248,21 @@ fun BrowserScreen(container: AppContainer, onClose: () -> Unit, onNavigate: (Str
                 InsecureWarning(tab.insecure!!.host, onBack = { tabsMgr.leaveInsecure(tab.id) }, onProceed = { tabsMgr.proceedInsecure(tab.id) })
             } else if (tab.url.isNotEmpty() && tab.sslProblem == null) {
                 key(tab.id, tab.webViewEpoch) {
-                    AndroidView(
-                        factory = { ctx -> tabsMgr.attach(tab.id, ctx) ?: android.view.View(ctx) },
+                    val pullEnabled by container.settings.pullToRefresh.collectAsStateWithLifecycle(true)
+                    // The spinner is shown only for the moment of the pull; the page's own progress bar takes over once it reloads.
+                    var pulling by remember { mutableStateOf(false) }
+                    val web: @Composable () -> Unit = {
+                        AndroidView(
+                            factory = { ctx -> tabsMgr.attach(tab.id, ctx) ?: android.view.View(ctx) },
+                            modifier = Modifier.fillMaxSize(),
+                            onRelease = { tabsMgr.detach(tab.id) },
+                        )
+                    }
+                    if (pullEnabled) androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+                        isRefreshing = pulling,
+                        onRefresh = { pulling = true; tabsMgr.reload(tab.id); scope.launch { kotlinx.coroutines.delay(700); pulling = false } },
                         modifier = Modifier.fillMaxSize(),
-                        onRelease = { tabsMgr.detach(tab.id) },
-                    )
+                    ) { web() } else web()
                 }
             } else {
                 Text(stringResource(R.string.enter_a_search_or_address_above), color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -414,6 +425,9 @@ DownloadStrip(container) { onNavigate("downloads") }
                         tabsMgr.extractArticle(tab.id) { found ->
                             if (found != null) reader = found else Toast.makeText(context, readerUnavailableText, Toast.LENGTH_SHORT).show()
                         }
+                    }
+                    if (UrlUtils.isHttp(tab.url)) item(stringResource(R.string.print_page), Icons.Rounded.Print) {
+                        tabsMgr.printPage(tab.id, context, tab.title.ifEmpty { UrlUtils.host(tab.url) })
                     }
                     if (UrlUtils.isHttp(tab.url)) item(stringResource(R.string.share), Icons.Rounded.Share) {
                         val send = Intent(Intent.ACTION_SEND).apply {

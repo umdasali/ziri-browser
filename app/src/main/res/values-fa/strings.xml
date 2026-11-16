@@ -639,4 +639,13 @@
     <string name="brown">قهوه‌ای</string>
     <string name="bookmark_added">نشانک افزوده شد</string>
     <string name="web_address">نشانی وب</string>
+    <string name="gestures">حرکات</string>
+    <string name="pull_to_refresh">کشیدن برای تازه‌سازی</string>
+    <string name="pull_to_refresh_desc">برای بارگذاری دوباره، در بالای صفحه به پایین بکشید</string>
+    <string name="clear_on_exit">پاک‌سازی هنگام خروج</string>
+    <string name="clear_on_exit_desc">هر بار که Ziri را می‌بندید حذف می‌شود (یا در اجرای بعدی اگر برنامه را کنار زده‌اید)</string>
+    <string name="search_tabs">جستجوی زبانه‌ها</string>
+    <string name="close_other_tabs">بستن زبانه‌های دیگر</string>
+    <string name="no_matching_tabs">زبانه‌ای مطابق یافت نشد</string>
+    <string name="print_page">چاپ / ذخیره به‌صورت PDF</string>
 </resources>

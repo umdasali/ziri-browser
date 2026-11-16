@@ -293,6 +293,14 @@ class TabsManager(
         WebStorage.getInstance().deleteAllData()
     }
 
+    /** Opens Android's print dialog for the page, which also offers "Save as PDF". [context] must be an Activity. */
+    fun printPage(id: String, context: Context, name: String) {
+        val wv = webViews[id] ?: return
+        val pm = context.getSystemService(Context.PRINT_SERVICE) as? android.print.PrintManager ?: return
+        val job = name.ifBlank { "Ziri page" }
+        runCatching { pm.print(job, wv.createPrintDocumentAdapter(job), android.print.PrintAttributes.Builder().build()) }
+    }
+
     /** Empties the WebView HTTP cache. Call on the main thread. */
     fun clearCache() {
         val existing = webViews.values.firstOrNull()
@@ -394,6 +402,14 @@ class TabsManager(
                 tabDao.insertAll(rows)
             }
         }
+        // Remember which normal tab was in front, so a restart opens the same one.
+        scope.launch {
+            _activeId.debounce(600).collect { id ->
+                restoredGate.await()
+                val t = _tabs.value.firstOrNull { it.id == id }
+                if (t != null && !t.isPrivate) runCatching { settings.setLastActiveTab(t.id) }
+            }
+        }
     }
 
     private val restoredGate = kotlinx.coroutines.CompletableDeferred<Unit>()
@@ -406,7 +422,7 @@ class TabsManager(
             // A link may have opened a tab during start-up already: keep it, in front of the saved ones, instead of dropping either.
             val hadOpened = _tabs.value.isNotEmpty()
             _tabs.update { opened -> old + opened }
-            if (!hadOpened) _activeId.value = old.first().id
+            if (!hadOpened) _activeId.value = settings.lastActiveTab()?.takeIf { id -> old.any { it.id == id } } ?: old.first().id
         } finally {
             restoredGate.complete(Unit)
         }
@@ -442,6 +458,13 @@ class TabsManager(
     /** Closes every normal tab, or every private tab, leaving the other kind alone. */
     fun closeAll(isPrivate: Boolean) {
         _tabs.value.filter { it.isPrivate == isPrivate }.map { it.id }.forEach { closeTab(it) }
+    }
+
+    /** Closes every tab of the same kind (normal, private or Tor) as [keepId] except that one. */
+    fun closeOthers(keepId: String) {
+        val keep = _tabs.value.firstOrNull { it.id == keepId } ?: return
+        _tabs.value.filter { it.id != keepId && it.isPrivate == keep.isPrivate && it.isTor == keep.isTor }.map { it.id }.forEach { closeTab(it) }
+        setActive(keepId)
     }
 
     fun closeAll() {

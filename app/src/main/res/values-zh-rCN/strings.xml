@@ -636,4 +636,13 @@
     <string name="brown">棕色</string>
     <string name="bookmark_added">已添加书签</string>
     <string name="web_address">网址</string>
+    <string name="gestures">手势</string>
+    <string name="pull_to_refresh">下拉刷新</string>
+    <string name="pull_to_refresh_desc">在页面顶部向下拖动即可重新加载</string>
+    <string name="clear_on_exit">退出时清除</string>
+    <string name="clear_on_exit_desc">每次关闭 Ziri 时清除（若应用被划掉，则在下次启动时清除）</string>
+    <string name="search_tabs">搜索标签页</string>
+    <string name="close_other_tabs">关闭其他标签页</string>
+    <string name="no_matching_tabs">没有匹配的标签页</string>
+    <string name="print_page">打印 / 保存为 PDF</string>
 </resources>

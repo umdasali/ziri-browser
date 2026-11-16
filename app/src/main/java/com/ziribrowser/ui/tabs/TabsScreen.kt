@@ -28,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Tab
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.VisibilityOff
@@ -84,7 +85,10 @@ fun TabsScreen(container: AppContainer, onOpenBrowser: () -> Unit, onHome: () ->
     val activeTab = tabs.firstOrNull { it.id == activeId }
     var torMode by remember { mutableStateOf(activeTab?.isTor == true) }
     var privateMode by remember { mutableStateOf(activeTab?.isPrivate == true) }
-    val shown = tabs.filter { if (torMode) it.isTor else it.isPrivate == privateMode && !it.isTor }
+    val ofMode = tabs.filter { if (torMode) it.isTor else it.isPrivate == privateMode && !it.isTor }
+    var query by remember { mutableStateOf("") }
+    // Private and Tor tabs are searched too: the filter only runs on this screen and nothing is stored.
+    val shown = if (query.isBlank()) ofMode else ofMode.filter { it.title.contains(query, true) || it.url.contains(query, true) }
     var url by remember { mutableStateOf("") }
 
     fun visit() {
@@ -149,9 +153,39 @@ fun TabsScreen(container: AppContainer, onOpenBrowser: () -> Unit, onHome: () ->
             }
         }
 
+        // ---- search the open tabs, and close all but the current one --------------------------------------------
+        if (ofMode.size > 1) {
+            Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    Modifier.weight(1f).heightIn(min = 40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)).padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Rounded.Search, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    BasicTextField(
+                        value = query, onValueChange = { query = it }, singleLine = true,
+                        modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
+                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        decorationBox = { inner ->
+                            Box(contentAlignment = Alignment.CenterStart) {
+                                if (query.isEmpty()) Text(stringResource(R.string.search_tabs), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, style = MaterialTheme.typography.bodyMedium)
+                                inner()
+                            }
+                        },
+                    )
+                    if (query.isNotEmpty()) IconButton({ query = "" }, Modifier.size(28.dp)) { Icon(Icons.Rounded.Close, stringResource(R.string.clear), Modifier.size(16.dp)) }
+                }
+                val keep = ofMode.firstOrNull { it.id == activeId } ?: ofMode.first()
+                TextButton({ mgr.closeOthers(keep.id); query = "" }) { Text(stringResource(R.string.close_other_tabs), maxLines = 1) }
+            }
+        }
+
         // ---- tabs (or an empty state) -----------------------------------------------------------------
         Box(Modifier.weight(1f).fillMaxWidth()) {
-            if (shown.isEmpty()) {
+            if (shown.isEmpty() && query.isNotBlank()) {
+                EmptyState(stringResource(R.string.no_matching_tabs), Icons.Rounded.Search)
+            } else if (shown.isEmpty()) {
                 EmptyState(
                     if (torMode) stringResource(R.string.no_tor_tabs_ntype_an_address_above_to_br) else if (privateMode) stringResource(R.string.no_private_tabs) else stringResource(R.string.no_open_tabs_ntype_an_address_above_to_s),
                     if (torMode) Icons.Rounded.Shield else if (privateMode) Icons.Rounded.VisibilityOff else Icons.Rounded.Tab,

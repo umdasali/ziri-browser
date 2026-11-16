@@ -639,4 +639,13 @@
     <string name="brown">भूरा</string>
     <string name="bookmark_added">बुकमार्क जोड़ा गया</string>
     <string name="web_address">वेब पता</string>
+    <string name="gestures">जेस्चर</string>
+    <string name="pull_to_refresh">खींचकर रिफ्रेश करें</string>
+    <string name="pull_to_refresh_desc">पेज के ऊपर से नीचे खींचकर उसे दोबारा लोड करें</string>
+    <string name="clear_on_exit">बाहर निकलते समय साफ़ करें</string>
+    <string name="clear_on_exit_desc">हर बार Ziri बंद करने पर हटाया जाता है (या ऐप स्वाइप करके हटाने पर अगली बार शुरू होने पर)</string>
+    <string name="search_tabs">टैब खोजें</string>
+    <string name="close_other_tabs">अन्य टैब बंद करें</string>
+    <string name="no_matching_tabs">कोई मेल खाता टैब नहीं</string>
+    <string name="print_page">प्रिंट करें / PDF में सहेजें</string>
 </resources>

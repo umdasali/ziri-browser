@@ -636,4 +636,13 @@
     <string name="brown">Nâu</string>
     <string name="bookmark_added">Đã thêm dấu trang</string>
     <string name="web_address">Địa chỉ web</string>
+    <string name="gestures">Cử chỉ</string>
+    <string name="pull_to_refresh">Kéo để làm mới</string>
+    <string name="pull_to_refresh_desc">Kéo xuống ở đầu trang để tải lại</string>
+    <string name="clear_on_exit">Xóa khi thoát</string>
+    <string name="clear_on_exit_desc">Được xóa mỗi khi bạn đóng Ziri (hoặc ở lần mở tiếp theo nếu ứng dụng bị vuốt tắt)</string>
+    <string name="search_tabs">Tìm tab</string>
+    <string name="close_other_tabs">Đóng các tab khác</string>
+    <string name="no_matching_tabs">Không có tab phù hợp</string>
+    <string name="print_page">In / lưu dưới dạng PDF</string>
 </resources>

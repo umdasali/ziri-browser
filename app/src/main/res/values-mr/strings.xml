@@ -639,4 +639,13 @@
     <string name="brown">तपकिरी</string>
     <string name="bookmark_added">बुकमार्क जोडला</string>
     <string name="web_address">वेब पत्ता</string>
+    <string name="gestures">जेश्चर</string>
+    <string name="pull_to_refresh">ओढून रिफ्रेश करा</string>
+    <string name="pull_to_refresh_desc">पेजच्या वरच्या भागातून खाली ओढून ते पुन्हा लोड करा</string>
+    <string name="clear_on_exit">बाहेर पडताना साफ करा</string>
+    <string name="clear_on_exit_desc">Ziri बंद करताना प्रत्येक वेळी काढले जाते (किंवा अ‍ॅप स्वाइप करून बंद केले असल्यास पुढील सुरुवातीला)</string>
+    <string name="search_tabs">टॅब शोधा</string>
+    <string name="close_other_tabs">इतर टॅब बंद करा</string>
+    <string name="no_matching_tabs">जुळणारा टॅब नाही</string>
+    <string name="print_page">प्रिंट करा / PDF म्हणून सेव्ह करा</string>
 </resources>

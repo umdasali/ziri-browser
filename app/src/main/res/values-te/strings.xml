@@ -639,4 +639,13 @@
     <string name="brown">గోధుమ</string>
     <string name="bookmark_added">బుక్‌మార్క్ జోడించబడింది</string>
     <string name="web_address">వెబ్ చిరునామా</string>
+    <string name="gestures">సంజ్ఞలు</string>
+    <string name="pull_to_refresh">లాగి రిఫ్రెష్ చేయండి</string>
+    <string name="pull_to_refresh_desc">పేజీ పైభాగంలో కిందికి లాగి మళ్లీ లోడ్ చేయండి</string>
+    <string name="clear_on_exit">నిష్క్రమించేటప్పుడు తొలగించు</string>
+    <string name="clear_on_exit_desc">Ziri మూసిన ప్రతిసారీ తొలగించబడుతుంది (యాప్‌ను స్వైప్ చేసి మూసివేస్తే తదుపరి ప్రారంభంలో)</string>
+    <string name="search_tabs">ట్యాబ్‌లను వెతకండి</string>
+    <string name="close_other_tabs">ఇతర ట్యాబ్‌లను మూసివేయండి</string>
+    <string name="no_matching_tabs">సరిపోలే ట్యాబ్‌లు లేవు</string>
+    <string name="print_page">ప్రింట్ / PDFగా సేవ్ చేయండి</string>
 </resources>

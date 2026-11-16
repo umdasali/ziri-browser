@@ -636,4 +636,13 @@
     <string name="brown">Cokelat</string>
     <string name="bookmark_added">Bookmark ditambahkan</string>
     <string name="web_address">Alamat web</string>
+    <string name="gestures">Gestur</string>
+    <string name="pull_to_refresh">Tarik untuk menyegarkan</string>
+    <string name="pull_to_refresh_desc">Seret ke bawah di bagian atas halaman untuk memuat ulang</string>
+    <string name="clear_on_exit">Hapus saat keluar</string>
+    <string name="clear_on_exit_desc">Dihapus setiap kali Ziri ditutup (atau saat dibuka berikutnya jika aplikasi digeser keluar)</string>
+    <string name="search_tabs">Cari tab</string>
+    <string name="close_other_tabs">Tutup tab lain</string>
+    <string name="no_matching_tabs">Tidak ada tab yang cocok</string>
+    <string name="print_page">Cetak / simpan sebagai PDF</string>
 </resources>

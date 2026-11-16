@@ -652,4 +652,13 @@
     <string name="brown">بني</string>
     <string name="bookmark_added">تمت إضافة الإشارة المرجعية</string>
     <string name="web_address">عنوان الويب</string>
+    <string name="gestures">الإيماءات</string>
+    <string name="pull_to_refresh">السحب للتحديث</string>
+    <string name="pull_to_refresh_desc">اسحب للأسفل من أعلى الصفحة لإعادة تحميلها</string>
+    <string name="clear_on_exit">المسح عند الخروج</string>
+    <string name="clear_on_exit_desc">يُحذف في كل مرة تغلق فيها Ziri (أو عند التشغيل التالي إذا أُغلق التطبيق بالسحب)</string>
+    <string name="search_tabs">بحث في علامات التبويب</string>
+    <string name="close_other_tabs">إغلاق علامات التبويب الأخرى</string>
+    <string name="no_matching_tabs">لا توجد علامات تبويب مطابقة</string>
+    <string name="print_page">طباعة / حفظ بصيغة PDF</string>
 </resources>

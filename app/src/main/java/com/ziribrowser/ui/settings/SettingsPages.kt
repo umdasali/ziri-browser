@@ -45,6 +45,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Cookie
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.LockOpen
@@ -154,6 +157,7 @@ private fun BrowsingPage(container: AppContainer, onBack: () -> Unit) {
     val engine by s.searchEngine.collectAsStateWithLifecycle(SearchEngine.GOOGLE)
     val webZoom by s.webTextZoom.collectAsStateWithLifecycle(100)
     var zoom by remember(webZoom) { mutableFloatStateOf(webZoom.toFloat()) }
+    val pullRefresh by s.pullToRefresh.collectAsStateWithLifecycle(true)
     SettingsPageScaffold(stringResource(R.string.search_amp_browsing), onBack) {
         SectionLabel(stringResource(R.string.search_engine))
         SettingsCard {
@@ -184,6 +188,10 @@ private fun BrowsingPage(container: AppContainer, onBack: () -> Unit) {
                 Text(stringResource(R.string.sample_text_on_a_web_page), fontSize = (16f * zoom / 100f).sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
+        SectionLabel(stringResource(R.string.gestures))
+        SettingsCard {
+            ToggleRow(stringResource(R.string.pull_to_refresh), stringResource(R.string.pull_to_refresh_desc), pullRefresh, Icons.Rounded.Refresh) { scope.launch { s.setPullToRefresh(it) } }
+        }
     }
 }
 
@@ -196,6 +204,7 @@ private fun PrivacyPage(container: AppContainer, onBack: () -> Unit) {
     val httpsFirst by s.httpsFirst.collectAsStateWithLifecycle(true)
     val httpsOnly by s.httpsOnly.collectAsStateWithLifecycle(true)
     val tabs by container.tabs.tabs.collectAsStateWithLifecycle()
+    val exit by s.exitClear.collectAsStateWithLifecycle(com.ziribrowser.data.SettingsRepository.ExitClear())
     var clearing by remember { mutableStateOf(false) }
     var showPermissions by remember { mutableStateOf(false) }
     var closeTabs by remember { mutableStateOf(false) }
@@ -212,6 +221,15 @@ private fun PrivacyPage(container: AppContainer, onBack: () -> Unit) {
                 stringResource(R.string.warn_before_sites_without_https), stringResource(R.string.show_a_warning_page_instead_of_opening_a),
                 httpsOnly, Icons.Rounded.LockOpen,
             ) { scope.launch { s.setHttpsOnly(it) } }
+        }
+        SectionLabel(stringResource(R.string.clear_on_exit))
+        SettingsCard {
+            Text(stringResource(R.string.clear_on_exit_desc), Modifier.padding(horizontal = 16.dp, vertical = 10.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            ToggleRow(stringResource(R.string.browsing_history), stringResource(R.string.pages_you_ve_visited), exit.history, Icons.Rounded.History) { scope.launch { s.setExitHistory(it) } }
+            RowDivider()
+            ToggleRow(stringResource(R.string.cookies_and_site_data), stringResource(R.string.signs_you_out_of_most_sites), exit.cookies, Icons.Rounded.Cookie) { scope.launch { s.setExitCookies(it) } }
+            RowDivider()
+            ToggleRow(stringResource(R.string.cached_images_and_files), stringResource(R.string.frees_up_storage), exit.cache, Icons.Rounded.Delete) { scope.launch { s.setExitCache(it) } }
         }
         SectionLabel(stringResource(R.string.site_data))
         SettingsCard {

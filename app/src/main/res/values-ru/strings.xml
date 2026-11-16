@@ -645,4 +645,13 @@
     <string name="brown">Коричневый</string>
     <string name="bookmark_added">Закладка добавлена</string>
     <string name="web_address">Веб-адрес</string>
+    <string name="gestures">Жесты</string>
+    <string name="pull_to_refresh">Потяните для обновления</string>
+    <string name="pull_to_refresh_desc">Потяните вниз в начале страницы, чтобы перезагрузить её</string>
+    <string name="clear_on_exit">Очищать при выходе</string>
+    <string name="clear_on_exit_desc">Удаляется при каждом закрытии Ziri (или при следующем запуске, если приложение смахнули)</string>
+    <string name="search_tabs">Поиск по вкладкам</string>
+    <string name="close_other_tabs">Закрыть другие вкладки</string>
+    <string name="no_matching_tabs">Нет подходящих вкладок</string>
+    <string name="print_page">Печать / сохранить как PDF</string>
 </resources>

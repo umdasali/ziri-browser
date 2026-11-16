@@ -639,4 +639,13 @@
     <string name="brown">Kahverengi</string>
     <string name="bookmark_added">Yer imi eklendi</string>
     <string name="web_address">Web adresi</string>
+    <string name="gestures">Hareketler</string>
+    <string name="pull_to_refresh">Yenilemek için çek</string>
+    <string name="pull_to_refresh_desc">Yeniden yüklemek için sayfanın en üstünde aşağı çekin</string>
+    <string name="clear_on_exit">Çıkışta temizle</string>
+    <string name="clear_on_exit_desc">Ziri\'yi her kapattığınızda silinir (uygulama kaydırılarak kapatıldıysa bir sonraki açılışta)</string>
+    <string name="search_tabs">Sekmelerde ara</string>
+    <string name="close_other_tabs">Diğer sekmeleri kapat</string>
+    <string name="no_matching_tabs">Eşleşen sekme yok</string>
+    <string name="print_page">Yazdır / PDF olarak kaydet</string>
 </resources>

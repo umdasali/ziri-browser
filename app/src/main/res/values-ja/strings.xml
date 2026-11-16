@@ -636,4 +636,13 @@
     <string name="brown">ブラウン</string>
     <string name="bookmark_added">ブックマークを追加しました</string>
     <string name="web_address">Webアドレス</string>
+    <string name="gestures">ジェスチャー</string>
+    <string name="pull_to_refresh">引っ張って更新</string>
+    <string name="pull_to_refresh_desc">ページの先頭で下にドラッグすると再読み込みします</string>
+    <string name="clear_on_exit">終了時に消去</string>
+    <string name="clear_on_exit_desc">Ziri を閉じるたびに削除されます（アプリをスワイプで終了した場合は次回起動時）</string>
+    <string name="search_tabs">タブを検索</string>
+    <string name="close_other_tabs">他のタブを閉じる</string>
+    <string name="no_matching_tabs">一致するタブがありません</string>
+    <string name="print_page">印刷 / PDF として保存</string>
 </resources>

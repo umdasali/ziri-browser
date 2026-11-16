@@ -642,4 +642,13 @@
     <string name="brown">Marrón</string>
     <string name="bookmark_added">Marcador añadido</string>
     <string name="web_address">Dirección web</string>
+    <string name="gestures">Gestos</string>
+    <string name="pull_to_refresh">Tirar para actualizar</string>
+    <string name="pull_to_refresh_desc">Arrastra hacia abajo al inicio de una página para recargarla</string>
+    <string name="clear_on_exit">Borrar al salir</string>
+    <string name="clear_on_exit_desc">Se elimina cada vez que cierras Ziri (o en el siguiente inicio si cerraste la app deslizándola)</string>
+    <string name="search_tabs">Buscar pestañas</string>
+    <string name="close_other_tabs">Cerrar las demás pestañas</string>
+    <string name="no_matching_tabs">Ninguna pestaña coincide</string>
+    <string name="print_page">Imprimir / guardar como PDF</string>
 </resources>

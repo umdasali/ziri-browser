@@ -640,4 +640,13 @@
     <string name="brown">Brown</string>
     <string name="bookmark_added">Bookmark added</string>
     <string name="web_address">Web address</string>
+    <string name="gestures">Gestures</string>
+    <string name="pull_to_refresh">Pull to refresh</string>
+    <string name="pull_to_refresh_desc">Drag down at the top of a page to reload it</string>
+    <string name="clear_on_exit">Clear on exit</string>
+    <string name="clear_on_exit_desc">Removed each time you close Ziri (or on the next start if the app was swiped away)</string>
+    <string name="search_tabs">Search tabs</string>
+    <string name="close_other_tabs">Close other tabs</string>
+    <string name="no_matching_tabs">No matching tabs</string>
+    <string name="print_page">Print / save as PDF</string>
 </resources>

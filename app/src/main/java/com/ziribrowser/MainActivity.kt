@@ -223,6 +223,8 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
     }
 
     override fun onDestroy() {
+        // Closed for good (Back out of the app) rather than rotated: honour "Clear on exit" now; a swipe-away is handled on the next start.
+        if (isFinishing) container.scope.launch { runCatching { container.clearOnExit() } }
         runCatching { unregisterReceiver(pipReceiver) }
         container.enterPip = null
         super.onDestroy()

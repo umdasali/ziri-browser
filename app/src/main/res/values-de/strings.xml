@@ -639,4 +639,13 @@
     <string name="brown">Braun</string>
     <string name="bookmark_added">Lesezeichen hinzugefügt</string>
     <string name="web_address">Webadresse</string>
+    <string name="gestures">Gesten</string>
+    <string name="pull_to_refresh">Zum Aktualisieren ziehen</string>
+    <string name="pull_to_refresh_desc">Am Seitenanfang nach unten ziehen, um sie neu zu laden</string>
+    <string name="clear_on_exit">Beim Beenden löschen</string>
+    <string name="clear_on_exit_desc">Wird bei jedem Schließen von Ziri entfernt (oder beim nächsten Start, wenn die App weggewischt wurde)</string>
+    <string name="search_tabs">Tabs durchsuchen</string>
+    <string name="close_other_tabs">Andere Tabs schließen</string>
+    <string name="no_matching_tabs">Keine passenden Tabs</string>
+    <string name="print_page">Drucken / als PDF speichern</string>
 </resources>

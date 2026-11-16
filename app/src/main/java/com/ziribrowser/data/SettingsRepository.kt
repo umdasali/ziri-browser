@@ -211,6 +211,30 @@ class SettingsRepository(private val context: Context) {
     suspend fun setDlWifiOnly(on: Boolean) { context.dataStore.edit { it[dlWifiKey] = on } }
     suspend fun setDlParts(n: Int) { context.dataStore.edit { it[dlPartsKey] = n.coerceIn(1, 6) } }
 
+    // ---- clear on exit / last tab / pull to refresh ------------------------------------------------
+    private val exitHistoryKey = booleanPreferencesKey("exit_clear_history")
+    private val exitCookiesKey = booleanPreferencesKey("exit_clear_cookies")
+    private val exitCacheKey = booleanPreferencesKey("exit_clear_cache")
+    private val lastActiveKey = stringPreferencesKey("last_active_tab")
+    private val pullRefreshKey = booleanPreferencesKey("pull_to_refresh")
+
+    /** What to wipe each time Ziri is closed (history, cookies and site data, cache). All off by default. */
+    data class ExitClear(val history: Boolean = false, val cookies: Boolean = false, val cache: Boolean = false) {
+        val any get() = history || cookies || cache
+    }
+    val exitClear: Flow<ExitClear> = context.dataStore.data.map { ExitClear(it[exitHistoryKey] ?: false, it[exitCookiesKey] ?: false, it[exitCacheKey] ?: false) }
+    suspend fun exitClearNow(): ExitClear = exitClear.first()
+    suspend fun setExitHistory(on: Boolean) { context.dataStore.edit { it[exitHistoryKey] = on } }
+    suspend fun setExitCookies(on: Boolean) { context.dataStore.edit { it[exitCookiesKey] = on } }
+    suspend fun setExitCache(on: Boolean) { context.dataStore.edit { it[exitCacheKey] = on } }
+
+    /** Id of the normal tab that was in front when Ziri last saved its tabs, so a restart opens the same one. */
+    suspend fun lastActiveTab(): String? = context.dataStore.data.first()[lastActiveKey]
+    suspend fun setLastActiveTab(id: String?) { context.dataStore.edit { if (id == null) it.remove(lastActiveKey) else it[lastActiveKey] = id } }
+
+    val pullToRefresh: Flow<Boolean> = context.dataStore.data.map { it[pullRefreshKey] ?: true }
+    suspend fun setPullToRefresh(on: Boolean) { context.dataStore.edit { it[pullRefreshKey] = on } }
+
     // ---- subtitle style ----------------------------------------------------------------------------
     private val subSizeKey = intPreferencesKey("sub_size")
     private val subColorKey = intPreferencesKey("sub_color")

@@ -639,4 +639,13 @@
     <string name="brown">বাদামি</string>
     <string name="bookmark_added">বুকমার্ক যোগ হয়েছে</string>
     <string name="web_address">ওয়েব ঠিকানা</string>
+    <string name="gestures">ইশারা</string>
+    <string name="pull_to_refresh">টেনে রিফ্রেশ করুন</string>
+    <string name="pull_to_refresh_desc">পেজের উপরে নিচের দিকে টেনে এটি আবার লোড করুন</string>
+    <string name="clear_on_exit">বের হওয়ার সময় মুছুন</string>
+    <string name="clear_on_exit_desc">প্রতিবার Ziri বন্ধ করলে মুছে যায় (অ্যাপ সোয়াইপ করে বন্ধ করলে পরের বার চালু হলে)</string>
+    <string name="search_tabs">ট্যাব খুঁজুন</string>
+    <string name="close_other_tabs">অন্য ট্যাব বন্ধ করুন</string>
+    <string name="no_matching_tabs">কোনো মিলে যাওয়া ট্যাব নেই</string>
+    <string name="print_page">প্রিন্ট / PDF হিসেবে সংরক্ষণ</string>
 </resources>

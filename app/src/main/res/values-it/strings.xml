@@ -642,4 +642,13 @@
     <string name="brown">Marrone</string>
     <string name="bookmark_added">Segnalibro aggiunto</string>
     <string name="web_address">Indirizzo web</string>
+    <string name="gestures">Gesti</string>
+    <string name="pull_to_refresh">Trascina per aggiornare</string>
+    <string name="pull_to_refresh_desc">Trascina verso il basso in cima alla pagina per ricaricarla</string>
+    <string name="clear_on_exit">Cancella all\'uscita</string>
+    <string name="clear_on_exit_desc">Rimosso ogni volta che chiudi Ziri (o al prossimo avvio se l\'app è stata chiusa con uno swipe)</string>
+    <string name="search_tabs">Cerca schede</string>
+    <string name="close_other_tabs">Chiudi le altre schede</string>
+    <string name="no_matching_tabs">Nessuna scheda corrispondente</string>
+    <string name="print_page">Stampa / salva come PDF</string>
 </resources>

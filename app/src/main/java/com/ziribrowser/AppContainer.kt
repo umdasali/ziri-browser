@@ -111,7 +111,20 @@ class AppContainer(app: Application) {
         }
         scope.launch {
             downloads.recover()
+            // Leftovers from a session that ended without a clean exit (swiped away from recents) go before any page loads.
+            runCatching { clearOnExit() }
             tabs.restore()
+        }
+    }
+
+    /** Wipes whatever "Clear on exit" is set to remove. Safe to call more than once. */
+    suspend fun clearOnExit() {
+        val c = settings.exitClearNow()
+        if (!c.any) return
+        if (c.history) db.history().clearAll()
+        withContext(Dispatchers.Main) {
+            if (c.cookies) tabs.clearCookiesAndSiteData()
+            if (c.cache) tabs.clearCache()
         }
     }
 }
