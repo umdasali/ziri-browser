@@ -1,0 +1,28 @@
+﻿Feature,Ziri,Chrome,Brave,Opera,Safari (iOS),UC Browser,Firefox,Edge
+PRIVACY & SECURITY,,,,,,,,
+Built-in ad blocker,Yes,No,Yes,Yes,Partial,Yes,Partial,Partial
+Tracker blocking,Yes,No,Yes,Yes,Yes,Partial,Yes,Yes
+Anti-fingerprinting,Yes,No,Yes,No,Partial,No,Partial,No
+Zero telemetry,Yes,No,Partial,No,Partial,No,Partial,No
+Tor tab,Yes,No,Partial,No,No,No,No,No
+HTTPS-only mode,Yes,Yes,Yes,Yes,Partial,No,Yes,Yes
+"Tracking-link cleaner (utm_, fbclid)",Yes,No,Yes,No,Yes,No,Yes,No
+Private tabs,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+Biometric lock on saved passwords,Yes,Yes,Yes,Yes,Yes,No,Yes,Yes
+Open-source code,Partial,Partial,Yes,No,No,No,Yes,No
+EVERYDAY FEATURES,,,,,,,,
+Password manager,Yes,Yes,Yes,Yes,Yes,No,Yes,Yes
+Reader mode,Yes,Partial,Yes,Yes,Yes,Yes,Yes,Yes
+Page translation,No,Yes,Partial,Partial,Yes,Yes,Yes,Yes
+Sync across devices,No,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+Extensions on mobile,No,No,No,No,Yes,No,Yes,Partial
+"Built-in video player (gestures, resume)",Yes,Partial,Partial,Partial,No,Yes,No,No
+Video download,Yes,No,No,Partial,No,Yes,No,No
+Download manager + file manager,Yes,Partial,Partial,Yes,Partial,Yes,Partial,Partial
+Picture-in-picture,Yes,Yes,Yes,Yes,Yes,Partial,Yes,Yes
+Built-in VPN,No,No,Partial (paid),Partial (browser proxy),No,No,No,No
+Themes and font choices,Yes,Partial,Partial,Yes,No,Yes,Partial,Partial
+Languages,22,50+,50+,50+,40+,40+,90+,50+
+Platform,Android,"Android, iOS","Android, iOS","Android, iOS",iOS only,"Android, iOS","Android, iOS","Android, iOS"
+
+"Notes: competitor columns are from general knowledge, not live checks; verify cells marked Partial before publishing. Ziri column reflects the current build."
