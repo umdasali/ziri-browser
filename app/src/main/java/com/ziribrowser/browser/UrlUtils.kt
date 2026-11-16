@@ -23,7 +23,11 @@ object UrlUtils {
     private val ipv4Regex = Regex("^\\d{1,3}(\\.\\d{1,3}){3}$")
 
     /** Host name exactly as written in [url] (no "www." stripping), or empty when it can't be parsed. */
-    fun rawHost(url: String): String = runCatching { URI(url).host }.getOrNull().orEmpty()
+    fun rawHost(url: String): String =
+        // java.net.URI refuses addresses with characters like | { } ^ or a space and then reports no host; a page must not
+        // slip past HTTPS-only / HTTPS-first that way, so fall back to reading the host by hand.
+        runCatching { URI(url).host }.getOrNull()?.takeIf { it.isNotEmpty() }
+            ?: url.substringAfter("://", "").substringBefore('/').substringBefore('?').substringBefore('#').substringAfterLast('@').substringBefore(':')
 
     /** True for addresses that never have a public HTTPS certificate: localhost, LAN names and IP addresses. */
     fun isLocalHost(host: String): Boolean {

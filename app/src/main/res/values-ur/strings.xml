@@ -625,4 +625,18 @@
     <string name="reader_unavailable">اس صفحے کے لیے ریڈر ویو دستیاب نہیں ہے</string>
     <string name="reader_view">ریڈر ویو</string>
     <string name="privacy_policy">رازداری کی پالیسی</string>
+    <string name="pure_black">خالص سیاہ</string>
+    <string name="pure_black_desc">ڈارک موڈ میں اصلی سیاہ پس منظر، OLED اسکرین پر بیٹری بچاتا ہے۔</string>
+    <string name="dark_web_pages">ڈارک ویب صفحات</string>
+    <string name="dark_web_pages_desc">جب ایپ ڈارک موڈ میں ہو تو ویب سائٹس کو بھی گہرا کریں۔ کچھ صفحات عجیب لگ سکتے ہیں۔</string>
+    <string name="indigo">نیلی</string>
+    <string name="sky">آسمانی</string>
+    <string name="emerald">زمردی</string>
+    <string name="lime">لائم</string>
+    <string name="amber">عنبر</string>
+    <string name="coral">مرجانی</string>
+    <string name="fuchsia">فیوشیا</string>
+    <string name="brown">بھورا</string>
+    <string name="bookmark_added">بک مارک شامل ہو گیا</string>
+    <string name="web_address">ویب ایڈریس</string>
 </resources>

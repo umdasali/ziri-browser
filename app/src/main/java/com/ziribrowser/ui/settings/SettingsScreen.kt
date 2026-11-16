@@ -90,7 +90,9 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(container: AppContainer, onNavigate: (String) -> Unit) {
     val s = container.settings
     val scope = rememberCoroutineScope()
-    val mode by s.themeMode.collectAsStateWithLifecycle(ThemeMode.LIGHT)
+    val mode by s.themeMode.collectAsStateWithLifecycle(ThemeMode.SYSTEM)
+    val amoled by s.amoled.collectAsStateWithLifecycle(false)
+    val darkWeb by s.darkWeb.collectAsStateWithLifecycle(false)
     val color by s.themeColor.collectAsStateWithLifecycle(ThemeColor.TEAL)
     val font by s.appFont.collectAsStateWithLifecycle(AppFont.DEFAULT)
     val textSize by s.textSize.collectAsStateWithLifecycle(TextSize.DEFAULT)
@@ -159,12 +161,20 @@ fun SettingsScreen(container: AppContainer, onNavigate: (String) -> Unit) {
                             ModeTile(m, m == mode, color.seed(dark), Modifier.weight(1f)) { scope.launch { s.setThemeMode(m) } }
                         }
                     }
-                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    androidx.compose.foundation.layout.FlowRow(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
                         ThemeColor.entries.forEach { c ->
                             ColorDot(c.seed(dark), c.label, c == color) { scope.launch { s.setThemeColor(c) } }
                         }
                     }
                 }
+                RowDivider()
+                ToggleRow(stringResource(R.string.pure_black), stringResource(R.string.pure_black_desc), amoled) { scope.launch { s.setAmoled(it) } }
+                RowDivider()
+                ToggleRow(stringResource(R.string.dark_web_pages), stringResource(R.string.dark_web_pages_desc), darkWeb) { scope.launch { s.setDarkWeb(it) } }
             }
 
             // ---- categories -----------------------------------------------------------------------------
@@ -276,7 +286,8 @@ private fun ModeTile(mode: ThemeMode, selected: Boolean, accent: Color, modifier
 private fun ColorDot(color: Color, label: String, selected: Boolean, onClick: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = onClick).padding(4.dp)) {
         Box(
-            Modifier.size(40.dp).background(color, CircleShape)
+            Modifier.size(40.dp).clip(CircleShape)
+                .background(color)
                 .then(if (selected) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape) else Modifier),
             contentAlignment = Alignment.Center,
         ) { if (selected) Icon(Icons.Rounded.Check, label, tint = Color.White) }

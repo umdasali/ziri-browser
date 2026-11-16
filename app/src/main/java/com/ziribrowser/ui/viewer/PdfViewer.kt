@@ -55,6 +55,8 @@ import com.ziribrowser.data.DownloadEntity
 import com.ziribrowser.data.DownloadStatus
 import com.ziribrowser.download.LiveProgress
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -69,12 +71,16 @@ fun PdfViewer(d: DownloadEntity, live: LiveProgress?, onBack: () -> Unit) {
 
     LaunchedEffect(d.id) {
         withContext(Dispatchers.IO) {
-            try { doc = PdfDoc.open(context, Uri.parse(d.fileUri)) }
+            try {
+                val opened = PdfDoc.open(context, Uri.parse(d.fileUri))
+                // Left the screen while it was opening: nobody will close it later, so do it here.
+                if (!isActive) opened.close() else doc = opened
+            }
             catch (e: SecurityException) { failed = ziriString(R.string.this_pdf_is_password_protected_which_zir) }
             catch (e: Exception) { failed = ziriString(R.string.this_pdf_couldn_t_be_opened) }
         }
     }
-    DisposableEffect(d.id) { onDispose { doc?.close() } }
+    DisposableEffect(d.id) { onDispose { doc?.let { kotlinx.coroutines.GlobalScope.launch(Dispatchers.IO) { it.close() } } } }
 
     Box(Modifier.fillMaxSize().background(Color(0xFF2B2D31))) {
         val pdf = doc
@@ -157,7 +163,7 @@ private class PdfDoc private constructor(private val pfd: ParcelFileDescriptor, 
             cache.get(key)?.let { return@withLock it }
             runCatching {
                 renderer.openPage(index).use { page ->
-                    val w = widthPx.coerceIn(200, 3600)
+                    val w = widthPx.coerceIn(200, 2400)
                     val h = (w.toFloat() * page.height / page.width).toInt().coerceAtLeast(1)
                     val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888).apply { eraseColor(AColor.WHITE) }
                     page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
@@ -168,9 +174,12 @@ private class PdfDoc private constructor(private val pfd: ParcelFileDescriptor, 
         }
     }
 
-    fun close() {
-        runCatching { renderer.close() }
-        runCatching { pfd.close() }
+    /** Waits for a page that is still being drawn (PdfRenderer refuses to close with a page open), then frees the file. */
+    suspend fun close() {
+        lock.withLock {
+            runCatching { renderer.close() }
+            runCatching { pfd.close() }
+        }
     }
 
     companion object {

@@ -625,4 +625,18 @@
     <string name="reader_unavailable">Die Leseansicht ist für diese Seite nicht verfügbar</string>
     <string name="reader_view">Leseansicht</string>
     <string name="privacy_policy">Datenschutzerklärung</string>
+    <string name="pure_black">Reines Schwarz</string>
+    <string name="pure_black_desc">Echtes Schwarz im dunklen Modus, spart Akku auf OLED-Displays.</string>
+    <string name="dark_web_pages">Dunkle Webseiten</string>
+    <string name="dark_web_pages_desc">Webseiten abdunkeln, wenn die App im dunklen Modus ist. Manche Seiten sehen dann seltsam aus.</string>
+    <string name="indigo">Indigo</string>
+    <string name="sky">Himmelblau</string>
+    <string name="emerald">Smaragd</string>
+    <string name="lime">Limette</string>
+    <string name="amber">Bernstein</string>
+    <string name="coral">Koralle</string>
+    <string name="fuchsia">Fuchsia</string>
+    <string name="brown">Braun</string>
+    <string name="bookmark_added">Lesezeichen hinzugefügt</string>
+    <string name="web_address">Webadresse</string>
 </resources>

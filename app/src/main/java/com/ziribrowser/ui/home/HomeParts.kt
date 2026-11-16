@@ -75,7 +75,10 @@ fun EngineIcon(engine: SearchEngine, size: Dp = 40.dp, selected: Boolean = false
 @DrawableRes
 fun logoForHost(host: String): Int? {
     val h = host.lowercase()
-    fun has(vararg names: String) = names.any { h == it || h.endsWith(".$it") || h.startsWith("$it.") || h.contains(".$it.") }
+    // Only the site's own domain counts ("google.com", "mail.google.co.uk"). Matching a name anywhere in the host let
+    // "google.evil.com" borrow Google's logo.
+    val tlds = listOf("com", "org", "net", "co", "co.uk", "com.au", "co.in", "in", "ru", "de", "fr", "es", "it", "jp", "be", "tv", "ai", "io", "com.br", "ca")
+    fun has(vararg names: String) = names.any { n -> h == n || tlds.any { t -> h == "$n.$t" || h.endsWith(".$n.$t") } }
     return when {
         has("google") -> R.drawable.logo_google
         has("youtube", "youtu") -> R.drawable.logo_youtube

@@ -622,4 +622,18 @@
     <string name="pw_promise">รหัสผ่านที่บันทึกไว้ถูกปิดผนึกด้วยกุญแจที่เก็บในฮาร์ดแวร์ความปลอดภัยของโทรศัพท์เครื่องนี้ และจะไม่ถูกส่งไปที่ใดเลย</string>
     <string name="reader_credit">มุมมองการอ่านใช้ไลบรารี Readability ของ Mozilla (Apache 2.0)</string>
     <string name="privacy_policy">นโยบายความเป็นส่วนตัว</string>
+    <string name="pure_black">ดำสนิท</string>
+    <string name="pure_black_desc">ใช้พื้นหลังสีดำจริงในโหมดมืด ช่วยประหยัดแบตเตอรี่บนจอ OLED</string>
+    <string name="dark_web_pages">หน้าเว็บโหมดมืด</string>
+    <string name="dark_web_pages_desc">ทำให้เว็บไซต์มืดเมื่อแอปอยู่ในโหมดมืด บางหน้าอาจแสดงผลแปลก</string>
+    <string name="indigo">น้ำเงินคราม</string>
+    <string name="sky">ฟ้า</string>
+    <string name="emerald">มรกต</string>
+    <string name="lime">เขียวมะนาว</string>
+    <string name="amber">อำพัน</string>
+    <string name="coral">ปะการัง</string>
+    <string name="fuchsia">ชมพูม่วง</string>
+    <string name="brown">น้ำตาล</string>
+    <string name="bookmark_added">เพิ่มบุ๊กมาร์กแล้ว</string>
+    <string name="web_address">ที่อยู่เว็บ</string>
 </resources>

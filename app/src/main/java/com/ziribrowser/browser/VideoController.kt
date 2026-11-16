@@ -128,11 +128,15 @@ class VideoController(
         }
     }
 
-    private suspend fun eval(wv: WebView, js: String): String? = suspendCancellableCoroutine { cont ->
-        wv.evaluateJavascript(js) { raw ->
-            // evaluateJavascript returns a JSON-encoded string, so the JSON we built is wrapped in quotes.
-            val text = runCatching { JSONTokener(raw).nextValue() as? String }.getOrNull()
-            if (cont.isActive) cont.resume(text)
+    // The callback never comes if the WebView is destroyed or its renderer dies mid-call; without a limit the poll loop would
+    // wait forever and video state, the notification and Picture-in-Picture controls would freeze.
+    private suspend fun eval(wv: WebView, js: String): String? = kotlinx.coroutines.withTimeoutOrNull(3000) {
+        suspendCancellableCoroutine<String?> { cont ->
+            wv.evaluateJavascript(js) { raw ->
+                // evaluateJavascript returns a JSON-encoded string, so the JSON we built is wrapped in quotes.
+                val text = runCatching { JSONTokener(raw).nextValue() as? String }.getOrNull()
+                if (cont.isActive) cont.resume(text)
+            }
         }
     }
 

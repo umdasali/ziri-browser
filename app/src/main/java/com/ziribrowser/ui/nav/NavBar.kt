@@ -60,11 +60,13 @@ private fun NavBarItem(item: NavItem, selected: Boolean, onClick: () -> Unit) {
     Row(
         Modifier
             .height(48.dp)
-            .clip(CircleShape)
-            .background(if (selected) scheme.primary.copy(alpha = 0.16f) else androidx.compose.ui.graphics.Color.Transparent)
+            // A background in the pill shape, not clip(): clipping cut off the corners of the tab-count badge.
+            .background(if (selected) scheme.primary.copy(alpha = 0.16f) else androidx.compose.ui.graphics.Color.Transparent, CircleShape)
             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick)
-            .padding(horizontal = if (selected) 16.dp else 14.dp)
-            .animateContentSize(tween(250)),
+            // animateContentSize clips to its bounds, so it goes before the padding: the badge overhangs the icon into the padding
+            // area and was being cut off when the clip hugged the icon.
+            .animateContentSize(tween(250))
+            .padding(horizontal = if (selected) 16.dp else 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         BadgedBox(badge = { if (item.badge > 0) Badge { Text("${item.badge}") } }) {

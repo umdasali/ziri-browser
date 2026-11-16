@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -47,9 +48,9 @@ class PasswordBridge(
     val prompts: StateFlow<Map<String, SavePrompt>> = _prompts
 
     /** When a sign-in was last submitted on a tab, and when a sign-in form was last seen again after that. */
-    private val submittedAt = HashMap<String, Long>()
-    private val formSeenAt = HashMap<String, Long>()
-    private val pending = HashMap<String, SavePrompt>()
+    private val submittedAt = java.util.concurrent.ConcurrentHashMap<String, Long>()
+    private val formSeenAt = java.util.concurrent.ConcurrentHashMap<String, Long>()
+    private val pending = java.util.concurrent.ConcurrentHashMap<String, SavePrompt>()
 
     val supported: Boolean get() =
         WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER) && WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)
@@ -72,13 +73,13 @@ class PasswordBridge(
 
     /** A new page started loading: the old offer no longer applies. A pending save survives the redirect after sign-in. */
     fun onNavigation(tabId: String) {
-        _offers.value = _offers.value - tabId
+        _offers.update { it - tabId }
     }
 
     /** The tab is gone: forget everything held for it. */
     fun forget(tabId: String) {
-        _offers.value = _offers.value - tabId
-        _prompts.value = _prompts.value - tabId
+        _offers.update { it - tabId }
+        _prompts.update { it - tabId }
         pending.remove(tabId); submittedAt.remove(tabId); formSeenAt.remove(tabId)
     }
 
@@ -92,8 +93,8 @@ class PasswordBridge(
                 formSeenAt[tabId] = System.currentTimeMillis()
                 scope.launch {
                     val found = store.forOrigin(origin)
-                    _offers.value = if (found.isEmpty()) _offers.value - tabId
-                    else _offers.value + (tabId to FillOffer(tabId, origin, found.map { FillOption(it.id, it.username) }))
+                    val offer = FillOffer(tabId, origin, found.map { FillOption(it.id, it.username) })
+                    _offers.update { cur -> if (found.isEmpty()) cur - tabId else cur + (tabId to offer) }
                 }
             }
             "submit" -> onSubmit(tabId, origin, json.optString("user"), json.optString("pass"))
@@ -115,7 +116,7 @@ class PasswordBridge(
             // Wait to see whether the sign-in worked: if the form is back, the password was probably wrong.
             delay(1500)
             if (pending[tabId] === prompt && (formSeenAt[tabId] ?: 0L) <= now) {
-                _prompts.value = _prompts.value + (tabId to prompt)
+                _prompts.update { it + (tabId to prompt) }
                 pending.remove(tabId)
             } else if (pending[tabId] === prompt) pending.remove(tabId)
         }
@@ -138,15 +139,15 @@ class PasswordBridge(
     }
 
     fun save(p: SavePrompt) {
-        _prompts.value = _prompts.value - p.tabId
+        _prompts.update { it - p.tabId }
         scope.launch { runCatching { if (p.updateId != null) store.update(p.updateId, p.username, p.password) else store.add(p.origin, p.username, p.password) } }
     }
 
     fun never(p: SavePrompt) {
-        _prompts.value = _prompts.value - p.tabId
+        _prompts.update { it - p.tabId }
         scope.launch { runCatching { store.neverSave(p.origin) } }
     }
 
-    fun dismissPrompt(tabId: String) { _prompts.value = _prompts.value - tabId }
-    fun dismissOffer(tabId: String) { _offers.value = _offers.value - tabId }
+    fun dismissPrompt(tabId: String) { _prompts.update { it - tabId } }
+    fun dismissOffer(tabId: String) { _offers.update { it - tabId } }
 }

@@ -628,4 +628,18 @@
     <string name="reader_unavailable">Le mode lecture n\'est pas disponible pour cette page</string>
     <string name="reader_view">Mode lecture</string>
     <string name="privacy_policy">Politique de confidentialité</string>
+    <string name="pure_black">Noir pur</string>
+    <string name="pure_black_desc">Utilise un vrai fond noir en mode sombre pour économiser la batterie sur les écrans OLED.</string>
+    <string name="dark_web_pages">Pages web sombres</string>
+    <string name="dark_web_pages_desc">Assombrit les sites web quand l\'application est en mode sombre. Certaines pages peuvent paraître étranges.</string>
+    <string name="indigo">Indigo</string>
+    <string name="sky">Ciel</string>
+    <string name="emerald">Émeraude</string>
+    <string name="lime">Citron vert</string>
+    <string name="amber">Ambre</string>
+    <string name="coral">Corail</string>
+    <string name="fuchsia">Fuchsia</string>
+    <string name="brown">Marron</string>
+    <string name="bookmark_added">Favori ajouté</string>
+    <string name="web_address">Adresse web</string>
 </resources>

@@ -28,9 +28,8 @@ object PrivateProfile {
 
     fun cookieFor(url: String, isPrivate: Boolean): String {
         if (isPrivate && isSupported) {
-            runCatching {
-                ProfileStore.getInstance().getProfile(NAME)?.cookieManager?.getCookie(url)
-            }.getOrNull()?.let { return it }
+            // Never fall back to the normal jar: that would send your signed-in cookie from a private tab.
+            return runCatching { ProfileStore.getInstance().getProfile(NAME)?.cookieManager?.getCookie(url) }.getOrNull().orEmpty()
         }
         return CookieManager.getInstance().getCookie(url).orEmpty()
     }

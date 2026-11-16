@@ -69,16 +69,21 @@ fun PasswordsPage(container: AppContainer, onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val offer by s.passwordsOffer.collectAsStateWithLifecycle(true)
-    val needUnlock by s.passwordsUnlock.collectAsStateWithLifecycle(true)
+    // null until the saved choice has loaded: asking before that used the default and could prompt (or lock) wrongly.
+    val needUnlockLoaded by s.passwordsUnlock.collectAsStateWithLifecycle(null as Boolean?)
+    val needUnlock = needUnlockLoaded ?: true
     val entries by store.all.collectAsStateWithLifecycle(emptyList())
     val never by store.neverSaved.collectAsStateWithLifecycle(emptyList())
     val unlockTitle = stringResource(R.string.pw_unlock_prompt)
 
     var unlocked by remember { mutableStateOf(false) }
     var asked by remember { mutableStateOf(0) }
-    LaunchedEffect(asked, needUnlock) {
-        Authenticator.require(context, needUnlock, unlockTitle) { ok -> unlocked = ok }
+    LaunchedEffect(asked, needUnlockLoaded != null) {
+        val need = needUnlockLoaded ?: return@LaunchedEffect
+        Authenticator.require(context, need, unlockTitle) { ok -> unlocked = ok }
     }
+    // Leaving the app locks the vault again, so coming back hours later asks for the phone's unlock.
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_STOP) { unlocked = false; asked++ }
 
     var query by remember { mutableStateOf("") }
     var selected by remember { mutableStateOf<CredentialEntity?>(null) }

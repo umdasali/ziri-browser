@@ -628,4 +628,18 @@
     <string name="reader_unavailable">O modo leitura não está disponível para esta página</string>
     <string name="reader_view">Modo leitura</string>
     <string name="privacy_policy">Política de privacidade</string>
+    <string name="pure_black">Preto puro</string>
+    <string name="pure_black_desc">Usa fundos totalmente pretos no modo escuro para poupar bateria em ecrãs OLED.</string>
+    <string name="dark_web_pages">Páginas web escuras</string>
+    <string name="dark_web_pages_desc">Escurece os sites quando a app está no modo escuro. Algumas páginas podem ficar estranhas.</string>
+    <string name="indigo">Índigo</string>
+    <string name="sky">Celeste</string>
+    <string name="emerald">Esmeralda</string>
+    <string name="lime">Lima</string>
+    <string name="amber">Âmbar</string>
+    <string name="coral">Coral</string>
+    <string name="fuchsia">Fúcsia</string>
+    <string name="brown">Castanho</string>
+    <string name="bookmark_added">Marcador adicionado</string>
+    <string name="web_address">Endereço web</string>
 </resources>

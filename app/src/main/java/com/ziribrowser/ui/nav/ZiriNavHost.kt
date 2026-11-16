@@ -91,6 +91,8 @@ private val destinations get() = listOf(
 @Composable
 fun ZiriNavHost(container: AppContainer) {
     val nav = rememberNavController()
+    // Back arrows must never pop the start destination: a second quick tap during the exit animation would leave an empty screen.
+    val back: () -> Unit = { if (nav.previousBackStackEntry != null) nav.popBackStack() }
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route
     val tabs by container.tabs.tabs.collectAsStateWithLifecycle()
@@ -154,16 +156,16 @@ fun ZiriNavHost(container: AppContainer) {
                             })
                         }
                         composable("bookmarks") { BookmarksScreen(container, onOpenBrowser = { openBrowser() }) }
-                        composable("history") { HistoryScreen(container, onBack = { nav.popBackStack() }, onOpenBrowser = { openBrowser() }) }
+                        composable("history") { HistoryScreen(container, onBack = back, onOpenBrowser = { openBrowser() }) }
                         composable("downloads") {
                             DownloadsScreen(container, onOpenViewer = { nav.navigate("viewer/$it") { launchSingleTop = true } }, onOpenFiles = { nav.navigate("files") { launchSingleTop = true } })
                         }
                         composable("files") {
                             FilesScreen(
                                 container,
-                                onPlay = { uri, name -> nav.navigate("play/${android.net.Uri.encode(uri.toString())}?title=${android.net.Uri.encode(name)}") },
+                                onPlay = { uri, name -> nav.navigate("play/${android.net.Uri.encode(uri.toString())}?title=${android.net.Uri.encode(name)}") { launchSingleTop = true } },
                                 onOpenViewer = { nav.navigate("viewer/$it") { launchSingleTop = true } },
-                                onBack = { nav.popBackStack() },
+                                onBack = back,
                             )
                         }
                         composable("play/{uri}?title={title}") { backStack ->
@@ -173,16 +175,16 @@ fun ZiriNavHost(container: AppContainer) {
                                 container.pendingQueue?.takeIf { q -> q.items.any { it.uri == uri } }?.let { q -> q.copy(start = q.items.indexOfFirst { it.uri == uri }.coerceAtLeast(0)) }
                                     ?: com.ziribrowser.ui.viewer.PlayQueue(listOf(com.ziribrowser.ui.viewer.PlayItem(uri, name, "local:$uri")))
                             }
-                            MxPlayer(container, queue, onBack = { nav.popBackStack() })
+                            MxPlayer(container, queue, onBack = back)
                         }
                         composable("viewer/{id}") { backStack ->
-                            ViewerScreen(container, backStack.arguments?.getString("id")?.toLongOrNull() ?: -1L, onBack = { nav.popBackStack() })
+                            ViewerScreen(container, backStack.arguments?.getString("id")?.toLongOrNull() ?: -1L, onBack = back)
                         }
                         composable("settings") {
                             SettingsScreen(container, onNavigate = { nav.navigate(it) { launchSingleTop = true } })
                         }
                         composable("settings/{page}") { backStack ->
-                            SettingsPage(container, backStack.arguments?.getString("page").orEmpty(), onBack = { nav.popBackStack() })
+                            SettingsPage(container, backStack.arguments?.getString("page").orEmpty(), onBack = back)
                         }
                     }
                 }

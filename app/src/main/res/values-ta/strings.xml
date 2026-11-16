@@ -625,4 +625,18 @@
     <string name="pw_promise">சேமித்த கடவுச்சொற்கள் இந்தத் தொலைபேசியின் பாதுகாப்பான ஹார்டுவேரில் வைக்கப்பட்ட சாவியால் மூடப்பட்டுள்ளன, அவை எங்கும் அனுப்பப்படுவதில்லை.</string>
     <string name="reader_credit">வாசிப்புக் காட்சி Mozilla இன் Readability நூலகத்தைப் பயன்படுத்துகிறது (Apache 2.0).</string>
     <string name="privacy_policy">தனியுரிமைக் கொள்கை</string>
+    <string name="pure_black">தூய கருப்பு</string>
+    <string name="pure_black_desc">டார்க் மோடில் உண்மையான கருப்புப் பின்னணி; OLED திரைகளில் பேட்டரியைச் சேமிக்கும்.</string>
+    <string name="dark_web_pages">டார்க் வலைப் பக்கங்கள்</string>
+    <string name="dark_web_pages_desc">செயலி டார்க் மோடில் இருக்கும்போது இணையதளங்களையும் இருட்டாக்கு. சில பக்கங்கள் விசித்திரமாகத் தெரியலாம்.</string>
+    <string name="indigo">இண்டிகோ</string>
+    <string name="sky">வான நீலம்</string>
+    <string name="emerald">மரகதம்</string>
+    <string name="lime">எலுமிச்சை பச்சை</string>
+    <string name="amber">அம்பர்</string>
+    <string name="coral">பவளம்</string>
+    <string name="fuchsia">ஃபுக்சியா</string>
+    <string name="brown">பழுப்பு</string>
+    <string name="bookmark_added">புக்மார்க் சேர்க்கப்பட்டது</string>
+    <string name="web_address">இணைய முகவரி</string>
 </resources>

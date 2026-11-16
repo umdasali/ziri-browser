@@ -625,4 +625,18 @@
     <string name="pw_promise">گذرواژه‌های ذخیره‌شده با کلیدی که در سخت‌افزار امن این گوشی نگهداری می‌شود مهروموم شده‌اند و هرگز به جایی ارسال نمی‌شوند.</string>
     <string name="reader_credit">نمای خواندن از کتابخانه Readability متعلق به Mozilla (Apache 2.0) استفاده می‌کند.</string>
     <string name="privacy_policy">خط‌مشی حریم خصوصی</string>
+    <string name="pure_black">مشکی خالص</string>
+    <string name="pure_black_desc">در حالت تاریک از پس‌زمینهٔ کاملاً مشکی استفاده می‌کند و باتری صفحه‌های OLED را ذخیره می‌کند.</string>
+    <string name="dark_web_pages">صفحه‌های وب تاریک</string>
+    <string name="dark_web_pages_desc">وقتی برنامه در حالت تاریک است، وب‌سایت‌ها را هم تیره کن. ممکن است برخی صفحه‌ها عجیب دیده شوند.</string>
+    <string name="indigo">نیلی</string>
+    <string name="sky">آسمانی</string>
+    <string name="emerald">زمردی</string>
+    <string name="lime">لیمویی</string>
+    <string name="amber">کهربایی</string>
+    <string name="coral">مرجانی</string>
+    <string name="fuchsia">سرخابی</string>
+    <string name="brown">قهوه‌ای</string>
+    <string name="bookmark_added">نشانک افزوده شد</string>
+    <string name="web_address">نشانی وب</string>
 </resources>

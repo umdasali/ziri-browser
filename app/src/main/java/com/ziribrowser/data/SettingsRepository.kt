@@ -29,6 +29,17 @@ enum class ThemeColor(@androidx.annotation.StringRes val labelRes: Int, val ligh
     PURPLE(R.string.purple, 0xFF7C3AED, 0xFFA78BFA),
     RED(R.string.red, 0xFFDC2626, 0xFFF87171),
     TEAL(R.string.teal, 0xFF0D9488, 0xFF2DD4BF),
+    INDIGO(R.string.indigo, 0xFF4F46E5, 0xFF818CF8),
+    SKY(R.string.sky, 0xFF0284C7, 0xFF38BDF8),
+    CYAN(R.string.cyan, 0xFF0891B2, 0xFF22D3EE),
+    EMERALD(R.string.emerald, 0xFF059669, 0xFF34D399),
+    LIME(R.string.lime, 0xFF65A30D, 0xFFA3E635),
+    AMBER(R.string.amber, 0xFFD97706, 0xFFFBBF24),
+    CORAL(R.string.coral, 0xFFE5533C, 0xFFFF8A73),
+    ROSE(R.string.rose, 0xFFE11D48, 0xFFFB7185),
+    FUCHSIA(R.string.fuchsia, 0xFFC026D3, 0xFFE879F9),
+    BROWN(R.string.brown, 0xFF92603A, 0xFFC79A72),
+    SLATE(R.string.slate, 0xFF475569, 0xFF94A3B8),
     ;
 
     val label: String get() = ziriString(labelRes)
@@ -98,13 +109,14 @@ class SettingsRepository(private val context: Context) {
      * frame would use default colours and flash before the saved theme appears.
      */
     private val boot = context.getSharedPreferences("boot_theme", Context.MODE_PRIVATE)
-    fun bootMode(): ThemeMode = boot.getString("mode", null).toEnum(ThemeMode.LIGHT)
+    fun bootMode(): ThemeMode = boot.getString("mode", null).toEnum(ThemeMode.SYSTEM)
+    fun bootAmoled(): Boolean = boot.getBoolean("amoled", false)
     fun bootColor(): ThemeColor = boot.getString("color", null).toEnum(ThemeColor.TEAL)
 
     private inline fun <reified E : Enum<E>> String?.toEnum(default: E): E =
         this?.let { s -> runCatching { enumValueOf<E>(s) }.getOrNull() } ?: default
 
-    val themeMode: Flow<ThemeMode> = context.dataStore.data.map { it[themeKey].toEnum(ThemeMode.LIGHT) }
+    val themeMode: Flow<ThemeMode> = context.dataStore.data.map { it[themeKey].toEnum(ThemeMode.SYSTEM) }
     val themeColor: Flow<ThemeColor> = context.dataStore.data.map { it[colorKey].toEnum(ThemeColor.TEAL) }
     val appFont: Flow<AppFont> = context.dataStore.data.map { it[fontKey].toEnum(AppFont.DEFAULT) }
     val textSize: Flow<TextSize> = context.dataStore.data.map { it[textSizeKey].toEnum(TextSize.DEFAULT) }
@@ -115,6 +127,14 @@ class SettingsRepository(private val context: Context) {
     val quickAccess: Flow<List<QuickAccessItem>> = context.dataStore.data.map { decode(it[quickKey]) }
 
     suspend fun setThemeMode(m: ThemeMode) { boot.edit().putString("mode", m.name).apply(); context.dataStore.edit { it[themeKey] = m.name } }
+    private val amoledKey = booleanPreferencesKey("theme_amoled")
+    private val darkWebKey = booleanPreferencesKey("dark_web_pages")
+    /** Pure-black backgrounds in dark mode (saves power on OLED screens). */
+    val amoled: Flow<Boolean> = context.dataStore.data.map { it[amoledKey] ?: false }
+    suspend fun setAmoled(on: Boolean) { boot.edit().putBoolean("amoled", on).apply(); context.dataStore.edit { it[amoledKey] = on } }
+    /** Darken web pages while the app is in dark mode. */
+    val darkWeb: Flow<Boolean> = context.dataStore.data.map { it[darkWebKey] ?: false }
+    suspend fun setDarkWeb(on: Boolean) { context.dataStore.edit { it[darkWebKey] = on } }
     suspend fun setThemeColor(c: ThemeColor) { boot.edit().putString("color", c.name).apply(); context.dataStore.edit { it[colorKey] = c.name } }
     suspend fun setAppFont(f: AppFont) { context.dataStore.edit { it[fontKey] = f.name } }
     suspend fun setTextSize(s: TextSize) { context.dataStore.edit { it[textSizeKey] = s.name } }

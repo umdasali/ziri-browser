@@ -159,7 +159,14 @@ fun FilesScreen(container: AppContainer, onPlay: (Uri, String) -> Unit, onOpenVi
             openTree(tree)
         }
     }
-    val deleteRequest = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { reload++ }
+    // The file Android was asked to delete: once it confirms, the matching Downloads row must go too, or Downloads keeps listing a missing file.
+    var pendingDelete by remember { mutableStateOf<android.net.Uri?>(null) }
+    val deleteRequest = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { res ->
+        val gone = pendingDelete
+        pendingDelete = null
+        if (gone != null && res.resultCode == android.app.Activity.RESULT_OK) scope.launch { dropDownloadRow(container, gone) }
+        reload++
+    }
 
     BackHandler(where != Where.Root) {
         val w = where
@@ -247,7 +254,7 @@ fun FilesScreen(container: AppContainer, onPlay: (Uri, String) -> Unit, onOpenVi
                                         }
                                     }
                                 },
-                                onDelete = { requestDelete(context, container, scope, f, where, deleteRequest::launch) { reload++ } },
+                                onDelete = { pendingDelete = f.uri; requestDelete(context, container, scope, f, where, deleteRequest::launch) { reload++ } },
                                 onRename = if (where is Where.Folder) ({ name ->
                                     val ok = runCatching { DocumentsContract.renameDocument(context.contentResolver, f.uri, name) }.getOrNull() != null
                                     Toast.makeText(context, if (ok) ziriString(R.string.renamed) else ziriString(R.string.couldn_t_rename_this_file), Toast.LENGTH_SHORT).show()
@@ -391,6 +398,11 @@ private fun queryFolder(context: Context, tree: Uri, docId: String): List<FileIt
     return out
 }
 
+/** Removes the Downloads entry for a file that was deleted from the Files screen (no-op if it wasn't one of Ziri's downloads). */
+private suspend fun dropDownloadRow(container: AppContainer, uri: android.net.Uri) {
+    container.db.downloads().findByUri(uri.toString())?.let { container.downloads.remove(it.id) }
+}
+
 private fun requestDelete(
     context: Context, container: AppContainer, scope: kotlinx.coroutines.CoroutineScope, f: FileItem, where: Where,
     launch: (IntentSenderRequest) -> Unit, done: () -> Unit,
@@ -400,9 +412,9 @@ private fun requestDelete(
             where == Where.ZiriDownloads -> {
                 scope.launch { container.db.downloads().findByUri(f.uri.toString())?.let { container.downloads.remove(it.id) }; done() }
             }
-            where is Where.Folder -> { DocumentsContract.deleteDocument(context.contentResolver, f.uri); done() }
+            where is Where.Folder -> { DocumentsContract.deleteDocument(context.contentResolver, f.uri); scope.launch { dropDownloadRow(container, f.uri) }; done() }
             Build.VERSION.SDK_INT >= 30 -> launch(IntentSenderRequest.Builder(MediaStore.createDeleteRequest(context.contentResolver, listOf(f.uri)).intentSender).build())
-            else -> { context.contentResolver.delete(f.uri, null, null); done() }
+            else -> { context.contentResolver.delete(f.uri, null, null); scope.launch { dropDownloadRow(container, f.uri) }; done() }
         }
     } catch (e: Exception) {
         Toast.makeText(context, context.getString(R.string.couldn_t_delete_this_file), Toast.LENGTH_SHORT).show()

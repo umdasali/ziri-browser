@@ -625,4 +625,18 @@
     <string name="reader_unavailable">এই পৃষ্ঠার জন্য রিডার ভিউ উপলভ্য নয়</string>
     <string name="reader_view">রিডার ভিউ</string>
     <string name="privacy_policy">গোপনীয়তা নীতি</string>
+    <string name="pure_black">খাঁটি কালো</string>
+    <string name="pure_black_desc">ডার্ক মোডে সম্পূর্ণ কালো ব্যাকগ্রাউন্ড, OLED স্ক্রিনে ব্যাটারি বাঁচায়।</string>
+    <string name="dark_web_pages">ডার্ক ওয়েব পেজ</string>
+    <string name="dark_web_pages_desc">অ্যাপ ডার্ক মোডে থাকলে ওয়েবসাইটও গাঢ় করুন। কিছু পেজ অদ্ভুত দেখাতে পারে।</string>
+    <string name="indigo">নীল</string>
+    <string name="sky">আকাশি</string>
+    <string name="emerald">পান্না</string>
+    <string name="lime">লাইম</string>
+    <string name="amber">অ্যাম্বার</string>
+    <string name="coral">প্রবাল</string>
+    <string name="fuchsia">ফুশিয়া</string>
+    <string name="brown">বাদামি</string>
+    <string name="bookmark_added">বুকমার্ক যোগ হয়েছে</string>
+    <string name="web_address">ওয়েব ঠিকানা</string>
 </resources>

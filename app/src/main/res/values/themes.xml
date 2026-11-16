@@ -5,4 +5,7 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
+    <!-- Context theme for WebViews only: a dark base so "Dark web pages" can work whatever the app/phone mode is. -->
+    <style name="Theme.Ziri.Web" parent="android:Theme.Material.NoActionBar" />
+    <style name="Theme.Ziri.WebLight" parent="android:Theme.Material.Light.NoActionBar" />
 </resources>

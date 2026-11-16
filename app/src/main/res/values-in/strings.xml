@@ -622,4 +622,18 @@
     <string name="pw_promise">Kata sandi tersimpan diamankan dengan kunci yang disimpan di perangkat keras aman ponsel ini dan tidak pernah dikirim ke mana pun.</string>
     <string name="reader_credit">Tampilan baca menggunakan pustaka Readability dari Mozilla (Apache 2.0).</string>
     <string name="privacy_policy">Kebijakan privasi</string>
+    <string name="pure_black">Hitam murni</string>
+    <string name="pure_black_desc">Gunakan latar hitam sejati di mode gelap untuk menghemat baterai di layar OLED.</string>
+    <string name="dark_web_pages">Halaman web gelap</string>
+    <string name="dark_web_pages_desc">Gelapkan situs web saat aplikasi dalam mode gelap. Beberapa halaman mungkin terlihat aneh.</string>
+    <string name="indigo">Indigo</string>
+    <string name="sky">Biru langit</string>
+    <string name="emerald">Zamrud</string>
+    <string name="lime">Limau</string>
+    <string name="amber">Ambar</string>
+    <string name="coral">Koral</string>
+    <string name="fuchsia">Fuksia</string>
+    <string name="brown">Cokelat</string>
+    <string name="bookmark_added">Bookmark ditambahkan</string>
+    <string name="web_address">Alamat web</string>
 </resources>

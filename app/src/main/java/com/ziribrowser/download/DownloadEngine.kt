@@ -133,6 +133,8 @@ class DownloadEngine(
     /** Call once at startup: downloads cut off by a process death are made resumable or retryable. */
     suspend fun recover() {
         dao.clearCookies() // older versions stored login cookies here
+        // A private download cut off mid-way leaves a hidden "pending" file behind; remove it together with its row.
+        dao.privateUnfinished().forEach { d -> runCatching { if (d.fileUri.isNotEmpty()) context.contentResolver.delete(android.net.Uri.parse(d.fileUri), null, null) } }
         dao.deletePrivate() // private downloads leave no entry once the app restarts (the file itself stays in Downloads)
         for (d in dao.active()) {
             dao.update(
@@ -156,7 +158,10 @@ class DownloadEngine(
             // Look at the playlist first: it decides the file type, and tells us early if the stream can't be saved.
             val plan = try {
                 withContext(Dispatchers.IO) { HlsDownloader.prepare(client, req.url, requestHeaders(req.cookie, req.userAgent, req.referer)) }
-            } catch (e: IOException) {
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // IOException, or IllegalArgumentException when OkHttp refuses a malformed host that Uri.parse accepted.
                 return EnqueueResult.Rejected(e.message ?: ziriString(R.string.this_video_can_t_be_downloaded))
             }
             val base = req.title?.let { FileUtils.sanitizeFilename(it, "video").take(80) } ?: "video"
@@ -230,6 +235,16 @@ class DownloadEngine(
                 }
                 dao.get(id)?.let { if (it.error == ziriString(R.string.waiting_for_wi_fi)) dao.update(it.copy(error = "")) }
                 inSlot(id) { download(id) }
+            } catch (ce: CancellationException) {
+                // Paused while still waiting for a slot / for Wi-Fi: download() never ran, so nothing else would record the pause
+                // and the row would stay QUEUED with no job to resume.
+                withContext(NonCancellable) {
+                    if (stopReason[id] == Stop.PAUSE) {
+                        stopReason.remove(id)
+                        dao.get(id)?.let { if (it.status == DownloadStatus.QUEUED) dao.update(it.copy(status = DownloadStatus.PAUSED, error = "")) }
+                    }
+                }
+                throw ce
             } finally {
                 _live.update { it - id }
                 jobs.remove(id)

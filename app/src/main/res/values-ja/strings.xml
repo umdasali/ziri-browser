@@ -622,4 +622,18 @@
     <string name="pw_promise">保存したパスワードは、このスマートフォンのセキュアハードウェアに保管されたキーで保護され、どこにも送信されません。</string>
     <string name="reader_credit">リーダービューは、MozillaのReadabilityライブラリ（Apache 2.0）を使用しています。</string>
     <string name="privacy_policy">プライバシーポリシー</string>
+    <string name="pure_black">ピュアブラック</string>
+    <string name="pure_black_desc">ダークモードで真っ黒の背景を使い、OLED画面の電力を節約します。</string>
+    <string name="dark_web_pages">ダークWebページ</string>
+    <string name="dark_web_pages_desc">アプリがダークモードのとき、Webサイトも暗くします。一部のページは表示が崩れることがあります。</string>
+    <string name="indigo">インディゴ</string>
+    <string name="sky">スカイ</string>
+    <string name="emerald">エメラルド</string>
+    <string name="lime">ライム</string>
+    <string name="amber">アンバー</string>
+    <string name="coral">コーラル</string>
+    <string name="fuchsia">フクシア</string>
+    <string name="brown">ブラウン</string>
+    <string name="bookmark_added">ブックマークを追加しました</string>
+    <string name="web_address">Webアドレス</string>
 </resources>

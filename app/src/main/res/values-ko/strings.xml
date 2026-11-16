@@ -622,4 +622,18 @@
     <string name="pw_promise">저장된 비밀번호는 이 휴대전화의 보안 하드웨어에 보관된 키로 암호화되며 어디에도 전송되지 않아요.</string>
     <string name="reader_credit">리더 보기는 Mozilla의 Readability 라이브러리(Apache 2.0)를 사용해요.</string>
     <string name="privacy_policy">개인정보 처리방침</string>
+    <string name="pure_black">퓨어 블랙</string>
+    <string name="pure_black_desc">다크 모드에서 완전한 검은 배경을 사용해 OLED 화면에서 배터리를 절약합니다.</string>
+    <string name="dark_web_pages">다크 웹 페이지</string>
+    <string name="dark_web_pages_desc">앱이 다크 모드일 때 웹사이트도 어둡게 표시합니다. 일부 페이지가 이상하게 보일 수 있습니다.</string>
+    <string name="indigo">인디고</string>
+    <string name="sky">하늘색</string>
+    <string name="emerald">에메랄드</string>
+    <string name="lime">라임</string>
+    <string name="amber">호박색</string>
+    <string name="coral">코랄</string>
+    <string name="fuchsia">푸크시아</string>
+    <string name="brown">갈색</string>
+    <string name="bookmark_added">북마크가 추가되었습니다</string>
+    <string name="web_address">웹 주소</string>
 </resources>

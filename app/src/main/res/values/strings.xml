@@ -626,4 +626,18 @@
     <string name="reader_credit">Reader view uses Mozilla\'s Readability library (Apache 2.0).</string>
     <string name="privacy_policy">Privacy policy</string>
     <string name="privacy_policy_url" translatable="false">https://umdasali.github.io/ziri-browser/privacy.html</string>
+    <string name="pure_black">Pure black</string>
+    <string name="pure_black_desc">True black backgrounds in dark mode save battery on OLED screens.</string>
+    <string name="dark_web_pages">Dark web pages</string>
+    <string name="dark_web_pages_desc">Darken websites while the app is in dark mode. Some pages may look odd.</string>
+    <string name="indigo">Indigo</string>
+    <string name="sky">Sky</string>
+    <string name="emerald">Emerald</string>
+    <string name="lime">Lime</string>
+    <string name="amber">Amber</string>
+    <string name="coral">Coral</string>
+    <string name="fuchsia">Fuchsia</string>
+    <string name="brown">Brown</string>
+    <string name="bookmark_added">Bookmark added</string>
+    <string name="web_address">Web address</string>
 </resources>

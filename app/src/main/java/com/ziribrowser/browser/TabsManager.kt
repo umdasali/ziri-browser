@@ -66,6 +66,10 @@ data class TabState(
     val notice: String? = null,
     /** A plain-http page waiting for the person's decision (HTTPS-only mode). Nothing is loaded until they choose. */
     val insecure: InsecurePrompt? = null,
+    /** The tab whose link opened this one. Back from this tab's first page closes it and returns there. */
+    val openerId: String? = null,
+    /** Bumped to make the screen build a fresh WebView for this tab (after its renderer crashed and the old one was dropped). */
+    val webViewEpoch: Int = 0,
 )
 
 /** The site that doesn't offer HTTPS and the address that would be opened. */
@@ -292,7 +296,7 @@ class TabsManager(
     /** Empties the WebView HTTP cache. Call on the main thread. */
     fun clearCache() {
         val existing = webViews.values.firstOrNull()
-        val wv = existing ?: WebView(MutableContextWrapper(appContext))
+        val wv = existing ?: WebView(MutableContextWrapper(webContext(appContext)))
         wv.clearCache(true)
         if (existing == null) wv.destroy()
     }
@@ -344,6 +348,24 @@ class TabsManager(
     private val lastLogged = HashMap<String, String>()
     private val defaultUa: String by lazy { WebSettings.getDefaultUserAgent(appContext) }
 
+    private var darkWeb = false
+    /** Darken web pages (algorithmic darkening + the page's own dark styles). Set by the UI only while the app is in dark mode. */
+    fun setDarkWeb(on: Boolean) {
+        darkWeb = on
+        webViews.values.forEach { applyDarkWeb(it) }
+    }
+    private fun applyDarkWeb(wv: WebView) {
+        // The context theme is what decides whether a page is told "prefers-color-scheme: dark", so it follows the switch.
+        ((wv.context as? MutableContextWrapper)?.baseContext as? android.view.ContextThemeWrapper)?.setTheme(webTheme())
+        if (androidx.webkit.WebViewFeature.isFeatureSupported(androidx.webkit.WebViewFeature.ALGORITHMIC_DARKENING)) {
+            androidx.webkit.WebSettingsCompat.setAlgorithmicDarkeningAllowed(wv.settings, darkWeb)
+        }
+    }
+    // WebView reads the page colour scheme (prefers-color-scheme, algorithmic darkening) from its context theme, and the activity
+    // theme follows the phone rather than the app's own choice. So each WebView gets a dark or light overlay theme to match setDarkWeb.
+    private fun webTheme() = if (darkWeb) com.ziribrowser.R.style.Theme_Ziri_Web else com.ziribrowser.R.style.Theme_Ziri_WebLight
+    private fun webContext(base: Context): Context = android.view.ContextThemeWrapper(base, webTheme())
+
     private var textZoom = 100
     /** Page text zoom (percent) from Settings; applied to open tabs now and to tabs created later. */
     fun setTextZoom(percent: Int) {
@@ -352,6 +374,7 @@ class TabsManager(
     }
 
     init {
+        scope.launch { runCatching { historyDao.prune(System.currentTimeMillis() - 180L * 24 * 3600 * 1000) } } // keep six months
         // Tor runs only while at least one Tor tab is open.
         scope.launch {
             _tabs.map { list -> list.any { it.isTor } }.distinctUntilChanged().collect { want -> withContext(Dispatchers.Main) { tor.setWanted(want) } }
@@ -360,7 +383,10 @@ class TabsManager(
         PrivateProfile.clear()
         // Persist open (non-private) tabs a moment after they change.
         scope.launch {
-            _tabs.debounce(600).collect { list ->
+            _tabs.debounce(600).collect { _ ->
+                // Until the saved tabs are loaded, an empty or partial list must not overwrite them.
+                restoredGate.await()
+                val list = _tabs.value
                 val rows = list.filter { !it.isPrivate }.mapIndexed { i, t ->
                     TabEntity(t.id, t.url, t.title, i, t.desktop)
                 }
@@ -370,18 +396,27 @@ class TabsManager(
         }
     }
 
+    private val restoredGate = kotlinx.coroutines.CompletableDeferred<Unit>()
+
     suspend fun restore() {
-        val saved = tabDao.all()
-        if (saved.isEmpty() || _tabs.value.isNotEmpty()) return
-        _tabs.value = saved.map { TabState(it.id, it.url, it.title, desktop = it.desktop) }
-        _activeId.value = saved.first().id
+        try {
+            val saved = tabDao.all()
+            if (saved.isEmpty()) return
+            val old = saved.map { TabState(it.id, it.url, it.title, desktop = it.desktop) }
+            // A link may have opened a tab during start-up already: keep it, in front of the saved ones, instead of dropping either.
+            val hadOpened = _tabs.value.isNotEmpty()
+            _tabs.update { opened -> old + opened }
+            if (!hadOpened) _activeId.value = old.first().id
+        } finally {
+            restoredGate.complete(Unit)
+        }
     }
 
     // ---- tab list operations -------------------------------------------------------------
 
-    fun openTab(url: String?, isPrivate: Boolean = false, activate: Boolean = true, isTor: Boolean = false): String {
+    fun openTab(url: String?, isPrivate: Boolean = false, activate: Boolean = true, isTor: Boolean = false, openerId: String? = null): String {
         val id = UUID.randomUUID().toString()
-        _tabs.update { it + TabState(id, url.orEmpty(), isPrivate = isPrivate || isTor, isTor = isTor) }
+        _tabs.update { it + TabState(id, url.orEmpty(), isPrivate = isPrivate || isTor, isTor = isTor, openerId = openerId) }
         if (activate) _activeId.value = id
         return id
     }
@@ -395,7 +430,10 @@ class TabsManager(
         val closed = list[idx]
         val rest = list.filterNot { it.id == id }
         _tabs.value = rest
-        if (_activeId.value == id) _activeId.value = rest.getOrNull(minOf(idx, rest.lastIndex))?.id
+        if (_activeId.value == id) {
+            // A tab opened from a link returns to the tab it came from; any other tab hands over to its neighbour.
+            _activeId.value = rest.firstOrNull { it.id == closed.openerId }?.id ?: rest.getOrNull(minOf(idx, rest.lastIndex))?.id
+        }
         destroy(id, wipe = closed.isPrivate)
         // Last private tab gone: drop the whole private session.
         if (closed.isPrivate && rest.none { it.isPrivate }) PrivateProfile.clear()
@@ -421,6 +459,7 @@ class TabsManager(
             if (wipe) { clearHistory(); clearCache(true); clearFormData() } // private tab: leave nothing behind
             destroy()
         }
+        if (customViewOwner == id) hideCustomView() // a tab closed while its video was fullscreen must not leave a black overlay
         lastLogged.remove(id)
         blockCounter.remove(id)
         shieldScripts.remove(id)
@@ -429,6 +468,9 @@ class TabsManager(
         _media.update { it - id }
         _thumbs.update { it - id }
     }
+
+    /** The internal blank page is not an address the person visited: keep the tab "empty" instead of showing about:blank. */
+    private fun shown(url: String) = if (url == "about:blank") "" else url
 
     private fun update(id: String, f: (TabState) -> TabState) =
         _tabs.update { list -> list.map { if (it.id == id) f(it) else it } }
@@ -477,9 +519,24 @@ class TabsManager(
 
     /** "Back to safety": drops the held-back page. */
     fun leaveInsecure(id: String) {
+        val bad = tab(id)?.url
         update(id) { it.copy(insecure = null, loading = false) }
+        settleOnCurrentPage(id, bad)
+    }
+
+    /**
+     * After a warning page is dismissed: the WebView never left the page it was on (the risky navigation was cancelled or hadn't
+     * committed), so show that page again. Going "back" here would skip it and land one page too far.
+     */
+    private fun settleOnCurrentPage(id: String, badUrl: String?) {
         val wv = webViews[id]
-        if (wv != null && wv.canGoBack()) wv.goBack() else update(id) { it.copy(url = "", title = "") }
+        val cur = wv?.url
+        when {
+            wv != null && cur != null && UrlUtils.isHttp(cur) && cur != badUrl ->
+                update(id) { it.copy(url = cur, title = wv.title.orEmpty(), canGoBack = wv.canGoBack(), canGoForward = wv.canGoForward()) }
+            wv != null && wv.canGoBack() -> wv.goBack()
+            else -> { update(id) { it.copy(url = "", title = "") }; wv?.loadUrl("about:blank") }
+        }
     }
 
     private fun cancelSsl(id: String) { sslHandlers.remove(id)?.cancel() }
@@ -487,10 +544,9 @@ class TabsManager(
     /** "Back to safety": refuse the certificate and leave the page. */
     fun sslBack(id: String) {
         cancelSsl(id)
+        val bad = tab(id)?.url
         update(id) { it.copy(sslProblem = null, loading = false) }
-        val wv = webViews[id]
-        if (wv != null && wv.canGoBack()) wv.goBack()
-        else { update(id) { it.copy(url = "", title = "") }; wv?.loadUrl("about:blank") }
+        settleOnCurrentPage(id, bad)
     }
 
     /** "Proceed anyway": only reachable after the user opens Advanced and confirms. */
@@ -570,14 +626,20 @@ class TabsManager(
         }
     }
 
-    fun reload(id: String) { webViews[id]?.reload() }
+    fun reload(id: String) { if (webViews[id] == null) rebuildWebView(id) else webViews[id]?.reload() }
+
+    /** The tab's WebView is gone (renderer crash): have the screen create a new one, which loads the tab's address again. */
+    private fun rebuildWebView(id: String) = update(id) { it.copy(webViewEpoch = it.webViewEpoch + 1, error = null) }
 
     fun reloadOrStop(id: String) {
-        val wv = webViews[id] ?: return
+        val wv = webViews[id] ?: return rebuildWebView(id)
         if (tab(id)?.loading == true) wv.stopLoading() else wv.reload()
     }
 
+    private var customViewOwner: String? = null
+
     fun hideCustomView() {
+        customViewOwner = null
         video.fullscreen = false
         video.refresh()
         customViewCallback?.onCustomViewHidden()
@@ -591,7 +653,7 @@ class TabsManager(
     fun attach(id: String, activity: Context): WebView? {
         val state = tab(id) ?: return null
         val wv = webViews[id] ?: createWebView(state, null)
-        (wv.context as? MutableContextWrapper)?.baseContext = activity
+        (wv.context as? MutableContextWrapper)?.baseContext = webContext(activity)
         (wv.parent as? android.view.ViewGroup)?.removeView(wv)
         // Compose's AndroidView gives a view with no LayoutParams wrap-content ones, and WebView then sizes the page to its
         // content: every `100vh` / `100dvh` computes to 0, so full-screen layouts (most modern sites) collapse and show blank.
@@ -604,7 +666,7 @@ class TabsManager(
     fun detach(id: String) {
         captureThumbnail(id)
         webViews[id]?.let {
-            (it.context as? MutableContextWrapper)?.baseContext = appContext
+            (it.context as? MutableContextWrapper)?.baseContext = webContext(appContext)
             it.onPause()
         }
     }
@@ -627,7 +689,7 @@ class TabsManager(
     fun fillLogin(tabId: String, loginId: Long) { webViews[tabId]?.let { passwords.fill(tabId, it, loginId) } }
 
     private fun createWebView(state: TabState, preset: WebView?): WebView {
-        val wv = preset ?: WebView(MutableContextWrapper(appContext))
+        val wv = preset ?: WebView(MutableContextWrapper(webContext(appContext)))
         val isolated = if (state.isPrivate) PrivateProfile.apply(wv) else false
         update(state.id) { it.copy(isolated = isolated) }
 
@@ -651,6 +713,7 @@ class TabsManager(
                 saveFormData = false
             }
         }
+        applyDarkWeb(wv)
         applyPrivacy(state.id, wv)
         applyDesktop(wv, state.desktop)
         wv.setOnScrollChangeListener { _, _, scrollY, _, oldScrollY -> onPageScrolled(state.id, scrollY, scrollY - oldScrollY) }
@@ -697,10 +760,12 @@ class TabsManager(
             val u = request.url.toString()
             if (!UrlUtils.isHttp(u)) return true
             if (request.isForMainFrame) {
-                val upgraded = maybeUpgrade(id, u)
+                // Rewriting re-issues the request as a GET, which would drop a form's POST body, so only plain GETs are rewritten.
+                val isGet = request.method.equals("GET", ignoreCase = true)
+                val upgraded = if (isGet) maybeUpgrade(id, u) else u
                 if (upgraded != u) { load(view, upgraded); return true }
                 if (gateInsecure(id, u)) return true
-                if (privacy.stripTrackingParams) {
+                if (isGet && privacy.stripTrackingParams) {
                     val cleaned = com.ziribrowser.privacy.TrackingParams.clean(u)
                     if (cleaned != u) { load(view, cleaned); return true }
                 }
@@ -745,12 +810,14 @@ class TabsManager(
             resetBlocked(id)
             if (id == _activeId.value) setChromeHidden(false) // a new page: show the bars
             hideAdSlots(view, url)
-            update(id) { it.copy(url = url, loading = true, error = null) }
+            update(id) { it.copy(url = shown(url), loading = true, error = null) }
         }
 
         override fun onPageFinished(view: WebView, url: String) {
+            // Landed on https: the upgrade worked, so a later visit to the http address must not look like a bounce back.
+            if (url.startsWith("https://", ignoreCase = true)) upgrades.remove(id)
             update(id) {
-                it.copy(url = url, title = view.title.orEmpty(), loading = false,
+                it.copy(url = shown(url), title = view.title.orEmpty(), loading = false,
                     canGoBack = view.canGoBack(), canGoForward = view.canGoForward())
             }
             val t = tab(id) ?: return
@@ -763,7 +830,7 @@ class TabsManager(
         }
 
         override fun doUpdateVisitedHistory(view: WebView, url: String, isReload: Boolean) {
-            update(id) { it.copy(url = url, canGoBack = view.canGoBack(), canGoForward = view.canGoForward()) }
+            update(id) { it.copy(url = shown(url), canGoBack = view.canGoBack(), canGoForward = view.canGoForward()) }
         }
 
         override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
@@ -793,8 +860,8 @@ class TabsManager(
         override fun onCreateWindow(view: WebView, isDialog: Boolean, isUserGesture: Boolean, resultMsg: Message): Boolean {
             if (!isUserGesture) return false // no pop-ups the user did not ask for
             val parent = tab(id)
-            val newId = openTab(null, isPrivate = parent?.isPrivate == true, isTor = parent?.isTor == true)
-            val newView = WebView(MutableContextWrapper(appContext))
+            val newId = openTab(null, isPrivate = parent?.isPrivate == true, isTor = parent?.isTor == true, openerId = id)
+            val newView = WebView(MutableContextWrapper(webContext(appContext)))
             createWebView(tab(newId)!!, newView)
             (resultMsg.obj as WebView.WebViewTransport).webView = newView
             resultMsg.sendToTarget()
@@ -802,6 +869,7 @@ class TabsManager(
         }
 
         override fun onShowCustomView(view: View, callback: CustomViewCallback) {
+            customViewOwner = id
             video.fullscreen = true
             video.refresh()
             customViewCallback?.onCustomViewHidden()

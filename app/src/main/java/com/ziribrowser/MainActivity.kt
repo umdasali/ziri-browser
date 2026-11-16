@@ -32,6 +32,8 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.core.content.ContextCompat
 import androidx.compose.runtime.collectAsState
@@ -102,13 +104,16 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
         val bootColor = container.settings.bootColor()
         val systemDark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         val bootDark = when (bootMode) { ThemeMode.LIGHT -> false; ThemeMode.DARK -> true; ThemeMode.SYSTEM -> systemDark }
-        window.setBackgroundDrawable(ColorDrawable(themeBackground(bootColor, bootDark).toArgb()))
+        val bootAmoled = container.settings.bootAmoled()
+        window.setBackgroundDrawable(ColorDrawable(themeBackground(bootColor, bootDark, bootAmoled).toArgb()))
 
         setContent {
             val mode by remember { container.settings.themeMode }.collectAsState(initial = bootMode)
             val color by remember { container.settings.themeColor }.collectAsState(initial = bootColor)
             val font by remember { container.settings.appFont }.collectAsState(initial = AppFont.DEFAULT)
             val textSize by remember { container.settings.textSize }.collectAsState(initial = TextSize.DEFAULT)
+            val amoled by remember { container.settings.amoled }.collectAsState(initial = bootAmoled)
+            val darkWeb by remember { container.settings.darkWeb }.collectAsState(initial = false)
 
             // Status/navigation bar icons must follow the app's mode, not the phone's.
             val forcedDark by remember { container.forceDarkBars }.collectAsState()
@@ -124,7 +129,12 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
                 enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
                 onDispose {}
             }
-            ZiriTheme(mode, color, font, textSize) { ZiriNavHost(container) }
+            // The window behind Compose follows live theme changes too, so it never shows a stale colour while resizing/rotating.
+            val appDark = isDark(mode)
+            SideEffect { window.setBackgroundDrawable(ColorDrawable(themeBackground(color, appDark, amoled).toArgb())) }
+            // Web pages are darkened only while the app itself is dark.
+            LaunchedEffect(appDark, darkWeb) { container.tabs.setDarkWeb(appDark && darkWeb) }
+            ZiriTheme(mode, color, font, textSize, amoled) { ZiriNavHost(container) }
         }
     }
 

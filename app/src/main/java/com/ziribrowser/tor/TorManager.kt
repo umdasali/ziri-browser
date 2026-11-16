@@ -19,6 +19,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.torproject.jni.TorService
 import java.net.InetSocketAddress
@@ -90,6 +91,8 @@ class TorManager(private val app: Application, private val scope: CoroutineScope
                     if (pct != null) {
                         if (pct >= 100) {
                             val port = svc.socksPort
+                            // getInfo() above can't be interrupted: if Tor was switched off meanwhile, don't point every tab at a dead proxy.
+                            if (!wanted || !kotlin.coroutines.coroutineContext.isActive) return@launch
                             if (port > 0) { setWebProxy(port); _state.value = TorState.Ready(port); return@launch }
                         } else _state.value = TorState.Connecting(pct)
                     }

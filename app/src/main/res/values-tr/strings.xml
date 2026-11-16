@@ -625,4 +625,18 @@
     <string name="pw_promise">Kayıtlı parolalar, bu telefonun güvenli donanımında tutulan bir anahtarla mühürlenir ve hiçbir yere gönderilmez.</string>
     <string name="reader_credit">Okuma görünümü Mozilla\'nın Readability kitaplığını (Apache 2.0) kullanır.</string>
     <string name="privacy_policy">Gizlilik politikası</string>
+    <string name="pure_black">Saf siyah</string>
+    <string name="pure_black_desc">Koyu modda gerçek siyah arka plan kullanır, OLED ekranlarda pil tasarrufu sağlar.</string>
+    <string name="dark_web_pages">Koyu web sayfaları</string>
+    <string name="dark_web_pages_desc">Uygulama koyu moddayken web sitelerini de koyulaştırır. Bazı sayfalar garip görünebilir.</string>
+    <string name="indigo">Çivit</string>
+    <string name="sky">Gök mavisi</string>
+    <string name="emerald">Zümrüt</string>
+    <string name="lime">Misket limonu</string>
+    <string name="amber">Kehribar</string>
+    <string name="coral">Mercan</string>
+    <string name="fuchsia">Fuşya</string>
+    <string name="brown">Kahverengi</string>
+    <string name="bookmark_added">Yer imi eklendi</string>
+    <string name="web_address">Web adresi</string>
 </resources>

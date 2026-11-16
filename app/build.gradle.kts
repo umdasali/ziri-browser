@@ -15,8 +15,8 @@ android {
         // 29+ so downloads use scoped storage (MediaStore) instead of legacy storage permissions.
         minSdk = 29
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.1.1"
+        versionCode = 3
+        versionName = "0.1.2"
     }
 
     // Release signing: put the details in keystore.properties (kept out of git, see keystore.properties.example).

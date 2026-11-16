@@ -628,4 +628,18 @@
     <string name="pw_promise">Las contraseñas guardadas se protegen con una clave almacenada en el hardware seguro de este teléfono y nunca se envían a ningún sitio.</string>
     <string name="reader_credit">La vista de lectura usa la biblioteca Readability de Mozilla (Apache 2.0).</string>
     <string name="privacy_policy">Política de privacidad</string>
+    <string name="pure_black">Negro puro</string>
+    <string name="pure_black_desc">Usa fondos negros reales en modo oscuro para ahorrar batería en pantallas OLED.</string>
+    <string name="dark_web_pages">Páginas web oscuras</string>
+    <string name="dark_web_pages_desc">Oscurece los sitios web cuando la app está en modo oscuro. Algunas páginas pueden verse raras.</string>
+    <string name="indigo">Índigo</string>
+    <string name="sky">Celeste</string>
+    <string name="emerald">Esmeralda</string>
+    <string name="lime">Lima</string>
+    <string name="amber">Ámbar</string>
+    <string name="coral">Coral</string>
+    <string name="fuchsia">Fucsia</string>
+    <string name="brown">Marrón</string>
+    <string name="bookmark_added">Marcador añadido</string>
+    <string name="web_address">Dirección web</string>
 </resources>

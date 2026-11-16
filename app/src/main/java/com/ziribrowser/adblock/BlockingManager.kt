@@ -111,6 +111,8 @@ class BlockingManager(
     }
 
     private fun load() {
+        // Both switches off while this ran (or a manual update with blocking off): don't keep ~30 MB of lists in memory for nothing.
+        if (!config.ads && !config.trackers) return
         val a = build(listOf("easylist.txt"))
         val t = build(listOf("easyprivacy.txt", "analytics.txt"))
         ads = a; trackers = t

@@ -622,4 +622,18 @@
     <string name="pw_promise">Mật khẩu đã lưu được niêm phong bằng khóa nằm trong phần cứng bảo mật của điện thoại này và không bao giờ được gửi đi đâu cả.</string>
     <string name="reader_credit">Chế độ đọc dùng thư viện Readability của Mozilla (Apache 2.0).</string>
     <string name="privacy_policy">Chính sách quyền riêng tư</string>
+    <string name="pure_black">Đen tuyền</string>
+    <string name="pure_black_desc">Dùng nền đen thật ở chế độ tối để tiết kiệm pin trên màn hình OLED.</string>
+    <string name="dark_web_pages">Trang web tối</string>
+    <string name="dark_web_pages_desc">Làm tối trang web khi ứng dụng ở chế độ tối. Một số trang có thể hiển thị lạ.</string>
+    <string name="indigo">Chàm</string>
+    <string name="sky">Xanh da trời</string>
+    <string name="emerald">Ngọc lục bảo</string>
+    <string name="lime">Xanh chanh</string>
+    <string name="amber">Hổ phách</string>
+    <string name="coral">San hô</string>
+    <string name="fuchsia">Hồng tím</string>
+    <string name="brown">Nâu</string>
+    <string name="bookmark_added">Đã thêm dấu trang</string>
+    <string name="web_address">Địa chỉ web</string>
 </resources>

@@ -181,7 +181,7 @@ fun DownloadStrip(container: AppContainer, onClick: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Rounded.Download, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(end = 6.dp))
             Text(
-                "${active.size} downloading" + if (speed > 0) " · ${FileUtils.formatSpeed(speed)}" else "" + if (known && total > 0) " · ${done * 100 / total}%" else "",
+                "${active.size} downloading" + (if (speed > 0) " · ${FileUtils.formatSpeed(speed)}" else "") + (if (known && total > 0) " · ${done * 100 / total}%" else ""),
                 style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold,
             )
         }

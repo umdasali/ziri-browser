@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Edit
@@ -82,6 +83,7 @@ fun BookmarksScreen(container: AppContainer, onOpenBrowser: () -> Unit) {
     val items by remember(query) { dao.search(UrlUtils.likeEscape(query)) }.collectAsStateWithLifecycle(emptyList())
     var editing by remember { mutableStateOf<BookmarkEntity?>(null) }
     var menuOpen by remember { mutableStateOf(false) }
+    var adding by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/html")) { uri ->
@@ -122,6 +124,7 @@ fun BookmarksScreen(container: AppContainer, onOpenBrowser: () -> Unit) {
 
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
         ZiriHeader(stringResource(R.string.bookmarks)) {
+            IconButton({ adding = true }) { Icon(Icons.Rounded.Add, stringResource(R.string.add_bookmark)) }
             Box {
                 IconButton({ menuOpen = true }) { Icon(Icons.Rounded.MoreVert, stringResource(R.string.more)) }
                 DropdownMenu(menuOpen, { menuOpen = false }) {
@@ -162,6 +165,36 @@ fun BookmarksScreen(container: AppContainer, onOpenBrowser: () -> Unit) {
                 }
             }
         }
+    }
+
+    if (adding) {
+        var title by remember { mutableStateOf("") }
+        var address by remember { mutableStateOf("") }
+        var folder by remember { mutableStateOf("") }
+        // A bare "example.com" gets https:// in front; anything that isn't a web address is refused.
+        val url = address.trim().let { if (it.isEmpty() || it.contains("://")) it else "https://$it" }
+        val valid = UrlUtils.isHttp(url) && url.substringAfter("://").isNotBlank()
+        AlertDialog(
+            onDismissRequest = { adding = false },
+            title = { Text(stringResource(R.string.add_bookmark)) },
+            text = {
+                Column {
+                    OutlinedTextField(address, { address = it }, singleLine = true, label = { Text(stringResource(R.string.web_address)) })
+                    OutlinedTextField(title, { title = it }, singleLine = true, label = { Text(stringResource(R.string.title)) })
+                    OutlinedTextField(folder, { folder = it }, singleLine = true, label = { Text(stringResource(R.string.folder_optional)) })
+                }
+            },
+            confirmButton = {
+                TextButton({
+                    scope.launch {
+                        dao.insert(BookmarkEntity(title = title.trim().ifEmpty { UrlUtils.host(url).ifEmpty { url } }, url = url, folder = folder.trim()))
+                        container.siteMeta.ensure(url)
+                    }
+                    adding = false
+                }, enabled = valid) { Text(stringResource(R.string.add)) }
+            },
+            dismissButton = { TextButton({ adding = false }) { Text(stringResource(R.string.cancel)) } },
+        )
     }
 
     editing?.let { b ->

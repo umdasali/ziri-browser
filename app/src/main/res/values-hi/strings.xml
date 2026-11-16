@@ -625,4 +625,18 @@
     <string name="reader_unavailable">इस पेज के लिए रीडर व्यू उपलब्ध नहीं है</string>
     <string name="reader_view">रीडर व्यू</string>
     <string name="privacy_policy">गोपनीयता नीति</string>
+    <string name="pure_black">शुद्ध काला</string>
+    <string name="pure_black_desc">डार्क मोड में असली काली पृष्ठभूमि, OLED स्क्रीन पर बैटरी बचाती है।</string>
+    <string name="dark_web_pages">डार्क वेब पेज</string>
+    <string name="dark_web_pages_desc">ऐप डार्क मोड में हो तो वेबसाइटें भी गहरी दिखाएँ। कुछ पेज अजीब दिख सकते हैं।</string>
+    <string name="indigo">नीलम</string>
+    <string name="sky">आसमानी</string>
+    <string name="emerald">पन्ना</string>
+    <string name="lime">नींबू</string>
+    <string name="amber">अंबर</string>
+    <string name="coral">मूँगा</string>
+    <string name="fuchsia">फ़ूशिया</string>
+    <string name="brown">भूरा</string>
+    <string name="bookmark_added">बुकमार्क जोड़ा गया</string>
+    <string name="web_address">वेब पता</string>
 </resources>

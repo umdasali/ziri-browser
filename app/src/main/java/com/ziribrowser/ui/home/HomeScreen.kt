@@ -439,7 +439,7 @@ private fun QuickAccessDialog(
     var preview by remember { mutableStateOf<com.ziribrowser.web.PagePreview?>(null) }
     var checked by remember { mutableStateOf(false) }
     androidx.compose.runtime.LaunchedEffect(normalized, valid) {
-        preview = null; checked = false
+        preview = null; checked = false; checking = false
         if (!valid || !normalized.substringAfter("://").contains('.')) return@LaunchedEffect
         checking = true
         kotlinx.coroutines.delay(700) // wait for a pause in typing

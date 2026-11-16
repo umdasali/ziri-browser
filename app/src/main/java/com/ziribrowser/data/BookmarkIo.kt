@@ -26,7 +26,7 @@ object BookmarkIo {
         "<DT><A HREF=\"${escape(b.url)}\" ADD_DATE=\"${b.createdAt / 1000}\">${escape(b.title.ifEmpty { b.url })}</A>"
 
     private val tokenRegex = Regex(
-        "<H3[^>]*>(.*?)</H3>|<A\\s[^>]*?HREF\\s*=\\s*\"([^\"]*)\"[^>]*>(.*?)</A>|</DL>",
+        "<H3[^>]*>(.*?)</H3>|<A\\s[^>]*?HREF\\s*=\\s*(?:\"([^\"]*)\"|'([^']*)')[^>]*>(.*?)</A>|</DL>",
         setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL),
     )
 
@@ -41,9 +41,9 @@ object BookmarkIo {
                 text.startsWith("<H3", ignoreCase = true) -> pendingFolder = unescape(m.groupValues[1]).trim()
                 text.startsWith("</DL", ignoreCase = true) -> if (folders.isNotEmpty()) folders.removeAt(folders.lastIndex)
                 else -> {
-                    val url = unescape(m.groupValues[2]).trim()
+                    val url = unescape(m.groupValues[2].ifEmpty { m.groupValues[3] }).trim()
                     if (url.startsWith("http://", true) || url.startsWith("https://", true)) {
-                        val title = unescape(m.groupValues[3].replace(Regex("<[^>]*>"), "")).trim()
+                        val title = unescape(m.groupValues[4].replace(Regex("<[^>]*>"), "")).trim()
                         result += BookmarkEntity(title = title.ifEmpty { url }, url = url, folder = folders.lastOrNull().orEmpty())
                     }
                 }

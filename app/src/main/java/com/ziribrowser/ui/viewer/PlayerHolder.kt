@@ -26,6 +26,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -74,6 +75,11 @@ class PlayerHolder(private val app: Application, private val container: AppConta
     var queue: PlayQueue? = null
         private set
 
+    /** Counts the players created so far, so the screen can switch to the new one after the decoder setting rebuilds it. */
+    val generation = MutableStateFlow(0)
+    /** Length of each item once known: the player only reports the current item's, which is wrong right after a skip. */
+    private val durations = HashMap<Int, Long>()
+
     /** True while the full-screen player is on screen. */
     @Volatile var screenOpen = false
 
@@ -89,8 +95,14 @@ class PlayerHolder(private val app: Application, private val container: AppConta
     /** Returns the player for [q], reusing the running one if it is already playing this same list. */
     fun start(q: PlayQueue): ExoPlayer {
         val existing = player
-        if (existing != null && queue.sameAs0(q)) { screenOpen = true; return existing }
+        if (existing != null && queue.sameAs0(q)) {
+            // Opened again from the list while it plays in the background: honour the item that was tapped.
+            if (!screenOpen && q.start in 0 until existing.mediaItemCount && q.start != existing.currentMediaItemIndex) existing.seekTo(q.start, C.TIME_UNSET)
+            screenOpen = true
+            return existing
+        }
         release()
+        durations.clear()
         val renderers = DefaultRenderersFactory(app).setEnableDecoderFallback(true)
             .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
             .setMediaCodecSelector { mime, secure, tunneling ->
@@ -113,9 +125,12 @@ class PlayerHolder(private val app: Application, private val container: AppConta
         p.addListener(object : Player.Listener {
             override fun onPositionDiscontinuity(old: Player.PositionInfo, new: Player.PositionInfo, reason: Int) {
                 if (old.mediaItemIndex != new.mediaItemIndex) {
-                    saveFor(old.mediaItemIndex, old.positionMs, p.duration.takeIf { it > 0 }, finished = reason == Player.DISCONTINUITY_REASON_AUTO_TRANSITION)
+                    saveFor(old.mediaItemIndex, old.positionMs, durations[old.mediaItemIndex], finished = reason == Player.DISCONTINUITY_REASON_AUTO_TRANSITION)
                     restoreFor(new.mediaItemIndex)
                 }
+            }
+            override fun onPlaybackStateChanged(state: Int) {
+                if (state == Player.STATE_READY && p.duration > 0) durations[p.currentMediaItemIndex] = p.duration
             }
             override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
                 // The sleep timer's "after this video" has done its job.
@@ -130,6 +145,7 @@ class PlayerHolder(private val app: Application, private val container: AppConta
         if (p.audioSessionId != C.AUDIO_SESSION_ID_UNSET) bindEffects(p.audioSessionId)
         player = p
         queue = q
+        generation.update { it + 1 }
         session = MediaSession.Builder(app, p).build()
         screenOpen = true
         restoreFor(q.start)
@@ -148,8 +164,8 @@ class PlayerHolder(private val app: Application, private val container: AppConta
 
     private fun saveFor(index: Int, posMs: Long, durMs: Long?, finished: Boolean) {
         val key = queue?.items?.getOrNull(index)?.key ?: return
-        val dur = durMs ?: return
-        val done = finished || posMs >= dur - 5000 || posMs < 3000
+        if (durMs == null && !finished) return
+        val done = finished || (durMs != null && (posMs >= durMs - 5000 || posMs < 3000))
         container.scope.launch { container.settings.setVideoPosition(key, if (done) null else posMs / 1000.0) }
     }
 

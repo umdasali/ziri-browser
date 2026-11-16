@@ -125,6 +125,7 @@ fun BrowserScreen(container: AppContainer, onClose: () -> Unit, onNavigate: (Str
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val linkCopiedText = stringResource(R.string.link_copied)
+    val bookmarkAddedText = stringResource(R.string.bookmark_added)
     val tab = tabs.firstOrNull { it.id == activeId }
 
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
@@ -148,6 +149,13 @@ fun BrowserScreen(container: AppContainer, onClose: () -> Unit, onNavigate: (Str
 
     BackHandler(enabled = customView != null) { tabsMgr.hideCustomView() }
     BackHandler(enabled = customView == null && tab.canGoBack) { tabsMgr.goBack(tab.id) }
+    // A tab a link opened has nothing to go back to: back closes it and lands on the page that link was on.
+    val openerOpen = tab.openerId != null && tabs.any { it.id == tab.openerId }
+    BackHandler(enabled = customView == null && !tab.canGoBack && openerOpen) { tabsMgr.closeTab(tab.id) }
+    // A warning page (certificate problem / plain http) is up: Back leaves it, instead of navigating the page hidden behind it.
+    BackHandler(enabled = customView == null && (tab.insecure != null || tab.sslProblem != null)) {
+        if (tab.sslProblem != null) tabsMgr.sslBack(tab.id) else tabsMgr.leaveInsecure(tab.id)
+    }
 
     // ---- fullscreen video -------------------------------------------------------------------
     val cv = customView
@@ -164,7 +172,7 @@ fun BrowserScreen(container: AppContainer, onClose: () -> Unit, onNavigate: (Str
         // paused stops drawing its video, which left the fullscreen player black with only the controls.
     }
 
-    var tfv by remember(tab.id, tab.url) { mutableStateOf(androidx.compose.ui.text.input.TextFieldValue(tab.url, androidx.compose.ui.text.TextRange(0, tab.url.length))) }
+    var tfv by remember(tab.id) { mutableStateOf(androidx.compose.ui.text.input.TextFieldValue(tab.url, androidx.compose.ui.text.TextRange(0, tab.url.length))) }
     val text = tfv.text
     var menuOpen by remember { mutableStateOf(false) }
     var blockDialog by remember { mutableStateOf(false) }
@@ -201,7 +209,8 @@ fun BrowserScreen(container: AppContainer, onClose: () -> Unit, onNavigate: (Str
     val torState by tabsMgr.torState.collectAsStateWithLifecycle()
     val torReady = torState is com.ziribrowser.tor.TorState.Ready
     val torOnForAll = torState !is com.ziribrowser.tor.TorState.Off && !tab.isTor
-    var editing by remember(tab.id) { mutableStateOf(tab.url.isEmpty()) }
+    // A tab a link opened is about to load that link, so it must not grab the keyboard like a blank new tab does.
+    var editing by remember(tab.id) { mutableStateOf(tab.url.isEmpty() && tab.openerId == null) }
     var hadFocus by remember { mutableStateOf(false) }
     val barsVisible = !chromeHidden || focused || editing || findOpen || menuOpen || tab.sslProblem != null || tab.insecure != null || tab.url.isEmpty()
     val topPad by androidx.compose.animation.core.animateDpAsState(if (barsVisible) 56.dp else 0.dp, androidx.compose.animation.core.tween(200), label = "topPad")
@@ -222,6 +231,8 @@ fun BrowserScreen(container: AppContainer, onClose: () -> Unit, onNavigate: (Str
     }
     androidx.compose.runtime.LaunchedEffect(editing) { if (editing) runCatching { addressFocus.requestFocus() } }
     androidx.compose.runtime.LaunchedEffect(tab.url) { if (tab.url.isNotEmpty() && !focused) editing = false }
+    // While the address bar is not being edited it shows the page address; typing is never overwritten by a loading page.
+    androidx.compose.runtime.LaunchedEffect(tab.url, focused) { if (!focused) tfv = androidx.compose.ui.text.input.TextFieldValue(tab.url, androidx.compose.ui.text.TextRange(0, tab.url.length)) }
 
     Box(Modifier.fillMaxSize().imePadding()) {
         // ---- page: the whole screen, edge to edge ------------------------------------------------
@@ -235,7 +246,7 @@ fun BrowserScreen(container: AppContainer, onClose: () -> Unit, onNavigate: (Str
             } else if (tab.insecure != null) {
                 InsecureWarning(tab.insecure!!.host, onBack = { tabsMgr.leaveInsecure(tab.id) }, onProceed = { tabsMgr.proceedInsecure(tab.id) })
             } else if (tab.url.isNotEmpty() && tab.sslProblem == null) {
-                key(tab.id) {
+                key(tab.id, tab.webViewEpoch) {
                     AndroidView(
                         factory = { ctx -> tabsMgr.attach(tab.id, ctx) ?: android.view.View(ctx) },
                         modifier = Modifier.fillMaxSize(),
@@ -386,6 +397,7 @@ DownloadStrip(container) { onNavigate("downloads") }
                             if (bookmarked) container.db.bookmarks().deleteByUrl(tab.url)
                             else {
                                 container.db.bookmarks().insert(BookmarkEntity(title = tab.title.ifEmpty { tab.url }, url = tab.url))
+                                Toast.makeText(context, bookmarkAddedText, Toast.LENGTH_SHORT).show()
                                 // Fetch the site's icon from its own tags so the bookmark shows a real favicon (skipped for private tabs).
                                 if (!tab.isPrivate) container.siteMeta.ensure(tab.url)
                             }
@@ -480,7 +492,7 @@ DownloadStrip(container) { onNavigate("downloads") }
             dismissButton = {
                 Row {
                     if (target.linkUrl != null) {
-                        TextButton({ tabsMgr.clearHitTarget(); tabsMgr.openTab(link, tab.isPrivate) }) { Text(stringResource(R.string.new_tab)) }
+                        TextButton({ tabsMgr.clearHitTarget(); tabsMgr.openTab(link, tab.isPrivate, isTor = tab.isTor, openerId = tab.id) }) { Text(stringResource(R.string.new_tab)) }
                     }
                     TextButton({
                         tabsMgr.clearHitTarget()

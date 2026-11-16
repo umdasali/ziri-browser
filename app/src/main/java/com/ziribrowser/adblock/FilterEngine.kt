@@ -187,6 +187,8 @@ private class Bucket {
         var i = 0
         while (i < p.length && (p[i].isLetterOrDigit() || p[i] == '.' || p[i] == '-')) i++
         if (i < 3 || !p.substring(0, i).contains('.')) return null
+        // "||ads.example" (no terminator) also matches ads.example.com; an exact-host key would never find it.
+        if (i == p.length && !r.endAnchor) return null
         if (i < p.length && p[i] != '^' && p[i] != '/' && p[i] != ':' && p[i] != '?') return null
         return p.substring(0, i)
     }

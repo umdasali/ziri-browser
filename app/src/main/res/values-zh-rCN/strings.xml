@@ -622,4 +622,18 @@
     <string name="pw_promise">已保存的密码使用存放在此手机安全硬件中的密钥加密，绝不会发送到任何地方。</string>
     <string name="reader_credit">阅读模式使用 Mozilla 的 Readability 库（Apache 2.0）。</string>
     <string name="privacy_policy">隐私政策</string>
+    <string name="pure_black">纯黑</string>
+    <string name="pure_black_desc">深色模式下使用纯黑背景，在 OLED 屏幕上更省电。</string>
+    <string name="dark_web_pages">深色网页</string>
+    <string name="dark_web_pages_desc">应用处于深色模式时，同时将网页变暗。部分页面可能显示异常。</string>
+    <string name="indigo">靛蓝</string>
+    <string name="sky">天蓝</string>
+    <string name="emerald">翠绿</string>
+    <string name="lime">青柠</string>
+    <string name="amber">琥珀</string>
+    <string name="coral">珊瑚</string>
+    <string name="fuchsia">紫红</string>
+    <string name="brown">棕色</string>
+    <string name="bookmark_added">已添加书签</string>
+    <string name="web_address">网址</string>
 </resources>

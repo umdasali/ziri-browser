@@ -638,4 +638,18 @@
     <string name="reader_unavailable">وضع القراءة غير متاح لهذه الصفحة</string>
     <string name="reader_view">وضع القراءة</string>
     <string name="privacy_policy">سياسة الخصوصية</string>
+    <string name="pure_black">أسود حقيقي</string>
+    <string name="pure_black_desc">استخدم خلفيات سوداء تمامًا في الوضع الداكن لتوفير البطارية على شاشات OLED.</string>
+    <string name="dark_web_pages">صفحات ويب داكنة</string>
+    <string name="dark_web_pages_desc">اجعل مواقع الويب داكنة عندما يكون التطبيق في الوضع الداكن. قد تبدو بعض الصفحات غريبة.</string>
+    <string name="indigo">نيلي</string>
+    <string name="sky">سماوي</string>
+    <string name="emerald">زمردي</string>
+    <string name="lime">ليموني</string>
+    <string name="amber">كهرماني</string>
+    <string name="coral">مرجاني</string>
+    <string name="fuchsia">فوشيا</string>
+    <string name="brown">بني</string>
+    <string name="bookmark_added">تمت إضافة الإشارة المرجعية</string>
+    <string name="web_address">عنوان الويب</string>
 </resources>

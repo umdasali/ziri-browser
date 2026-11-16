@@ -43,10 +43,11 @@ private val Black = Color.Black
 private fun onColor(bg: Color): Color = if (bg.luminance() > 0.4f) Color(0xFF16181D) else Color.White
 
 /** The background colour a theme will use, so the window can be painted correctly before Compose starts. */
-fun themeBackground(color: ThemeColor, dark: Boolean): Color = buildScheme(color.seed(dark), dark).background
+fun themeBackground(color: ThemeColor, dark: Boolean, amoled: Boolean = false): Color =
+    buildScheme(color.seed(dark), dark, amoled).background
 
 /** Builds a full Material 3 scheme from one accent: every surface carries a faint tint of it. */
-private fun buildScheme(accent: Color, dark: Boolean): ColorScheme {
+private fun buildScheme(accent: Color, dark: Boolean, amoled: Boolean = false): ColorScheme {
     return if (!dark) {
         val bg = lerp(White, accent, 0.025f)
         lightColorScheme(
@@ -76,8 +77,9 @@ private fun buildScheme(accent: Color, dark: Boolean): ColorScheme {
             error = Color(0xFFDC2626),
         )
     } else {
-        val base = Color(0xFF0F1115)
-        val bg = lerp(base, accent, 0.035f)
+        // AMOLED: true black behind everything; cards still lift off it through their accent tint.
+        val base = if (amoled) Black else Color(0xFF0F1115)
+        val bg = if (amoled) Black else lerp(base, accent, 0.035f)
         darkColorScheme(
             primary = accent,
             onPrimary = onColor(accent),
@@ -161,10 +163,11 @@ fun ZiriTheme(
     color: ThemeColor = ThemeColor.TEAL,
     font: AppFont = AppFont.DEFAULT,
     textSize: TextSize = TextSize.DEFAULT,
+    amoled: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val dark = isDark(mode)
-    val scheme = buildScheme(color.seed(dark), dark).animated()
+    val scheme = buildScheme(color.seed(dark), dark, amoled).animated()
     val density = LocalDensity.current
     CompositionLocalProvider(LocalDensity provides Density(density.density, density.fontScale * textSize.scale)) {
         MaterialTheme(colorScheme = scheme, typography = typography(font.fontFamily()), shapes = ZiriShapes, content = content)

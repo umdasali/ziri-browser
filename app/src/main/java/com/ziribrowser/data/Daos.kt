@@ -53,6 +53,10 @@ interface HistoryDao {
     @Query("SELECT * FROM history ORDER BY visited_at DESC LIMIT :limit")
     fun recent(limit: Int): Flow<List<HistoryEntity>>
 
+    /** Drops visits older than [cutoff] so the table (and the suggestion queries over it) doesn't grow forever. */
+    @Query("DELETE FROM history WHERE visited_at < :cutoff")
+    suspend fun prune(cutoff: Long)
+
     @Insert
     suspend fun insert(h: HistoryEntity)
 
@@ -107,6 +111,9 @@ interface DownloadDao {
 
     @Query("UPDATE downloads SET cookie = '' WHERE cookie != ''")
     suspend fun clearCookies()
+
+    @Query("SELECT * FROM downloads WHERE is_private = 1 AND status != 'COMPLETED'")
+    suspend fun privateUnfinished(): List<DownloadEntity>
 
     @Query("DELETE FROM downloads WHERE is_private = 1")
     suspend fun deletePrivate()

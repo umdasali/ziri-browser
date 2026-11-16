@@ -114,6 +114,9 @@ fun ReaderView(container: AppContainer, article: Article, isPrivate: Boolean, on
                     }
                 }
             },
+            // Without this the reader's WebView (and, in a private tab, the private profile it holds open) lived on after closing,
+            // which also stopped the private cookies being wiped when the last private tab closed.
+            onRelease = { it.destroy() },
             update = { wv ->
                 if (shownKey.value != page) {
                     shownKey.value = page

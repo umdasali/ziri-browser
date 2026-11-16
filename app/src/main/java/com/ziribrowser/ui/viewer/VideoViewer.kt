@@ -20,7 +20,9 @@ import com.ziribrowser.download.LiveProgress
  */
 @Composable
 fun VideoViewer(container: AppContainer, d: DownloadEntity, live: LiveProgress?, onBack: () -> Unit) {
-    val all by remember { container.db.downloads().observeAll() }.collectAsState(emptyList())
+    val loaded by remember { container.db.downloads().observeAll() }.collectAsState(null as List<DownloadEntity>?)
+    // Wait for the first list: building the queue from an empty placeholder left out the "play next" items and subtitles for good.
+    val all = loaded ?: return
     // Fixed once: the list shouldn't change under the player while it runs.
     val queue = remember(d.id) {
         val others = all.filter { it.id != d.id && it.status == DownloadStatus.COMPLETED && (it.category == "VIDEOS" || it.category == "AUDIO") }

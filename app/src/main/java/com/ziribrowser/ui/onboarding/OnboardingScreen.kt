@@ -38,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ziribrowser.data.Interest
@@ -47,8 +48,13 @@ import com.ziribrowser.ui.GlassSurface
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun OnboardingScreen(initial: Set<Interest> = emptySet(), onDone: (Set<Interest>) -> Unit) {
-    var chosen by remember { mutableStateOf(initial) }
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding().navigationBarsPadding().padding(horizontal = 24.dp)) {
+    // Saved by name so the picks survive rotation.
+    var chosenNames by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(initial.map { it.name }) }
+    val chosen = chosenNames.mapNotNull { n -> Interest.entries.firstOrNull { it.name == n } }.toSet()
+    Column(Modifier.fillMaxSize()
+        // The overlay sits above Home: swallow touches so a tap in the margins can't press something hidden underneath.
+        .pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent().changes.forEach { it.consume() } } }
+        .background(MaterialTheme.colorScheme.background).statusBarsPadding().navigationBarsPadding().padding(horizontal = 24.dp)) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
             Text(stringResource(R.string.welcome_to_ziri), modifier = Modifier.padding(top = 36.dp).semantics { heading() }, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
             Text(stringResource(R.string.what_are_you_into), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
@@ -58,7 +64,7 @@ fun OnboardingScreen(initial: Set<Interest> = emptySet(), onDone: (Set<Interest>
             )
             FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Interest.entries.forEach { i ->
-                    InterestChip(i, i in chosen) { chosen = if (i in chosen) chosen - i else chosen + i }
+                    InterestChip(i, i in chosen) { chosenNames = if (i in chosen) chosenNames - i.name else chosenNames + i.name }
                 }
             }
             Text(

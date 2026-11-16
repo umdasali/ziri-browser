@@ -160,7 +160,9 @@ fun MxPlayer(
     val activity = context as? Activity
     val holder = container.players
     var error by remember(queue) { mutableStateOf<String?>(null) }
-    val player = remember(queue) { holder.start(queue) }
+    // Changing the decoder rebuilds the player; the generation makes this screen pick up the new one instead of the released one.
+    val generation by holder.generation.collectAsStateWithLifecycle()
+    val player = remember(queue, generation) { holder.start(queue) }
     var index by remember(queue) { mutableIntStateOf(player.currentMediaItemIndex) }
     val current = queue.items.getOrNull(index)
     val title = current?.title.orEmpty()

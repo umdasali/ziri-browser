@@ -631,4 +631,18 @@
     <string name="pw_promise">Сохранённые пароли защищены ключом, который хранится в защищённом оборудовании телефона, и никуда не отправляются.</string>
     <string name="reader_credit">Режим чтения использует библиотеку Readability от Mozilla (Apache 2.0).</string>
     <string name="privacy_policy">Политика конфиденциальности</string>
+    <string name="pure_black">Чисто чёрный</string>
+    <string name="pure_black_desc">Настоящий чёрный фон в тёмной теме экономит заряд на OLED-экранах.</string>
+    <string name="dark_web_pages">Тёмные веб-страницы</string>
+    <string name="dark_web_pages_desc">Затемнять сайты, когда приложение в тёмной теме. Некоторые страницы могут выглядеть странно.</string>
+    <string name="indigo">Индиго</string>
+    <string name="sky">Небесный</string>
+    <string name="emerald">Изумрудный</string>
+    <string name="lime">Лайм</string>
+    <string name="amber">Янтарный</string>
+    <string name="coral">Коралловый</string>
+    <string name="fuchsia">Фуксия</string>
+    <string name="brown">Коричневый</string>
+    <string name="bookmark_added">Закладка добавлена</string>
+    <string name="web_address">Веб-адрес</string>
 </resources>

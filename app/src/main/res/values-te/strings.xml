@@ -625,4 +625,18 @@
     <string name="pw_promise">సేవ్ చేసిన పాస్‌వర్డ్‌లు ఈ ఫోన్‌లోని సురక్షిత హార్డ్‌వేర్‌లో ఉన్న కీతో సీల్ చేయబడతాయి మరియు ఎక్కడికీ పంపబడవు.</string>
     <string name="reader_credit">రీడర్ వ్యూ Mozilla యొక్క Readability లైబ్రరీని (Apache 2.0) ఉపయోగిస్తుంది.</string>
     <string name="privacy_policy">గోప్యతా విధానం</string>
+    <string name="pure_black">స్వచ్ఛమైన నలుపు</string>
+    <string name="pure_black_desc">డార్క్ మోడ్‌లో నిజమైన నలుపు నేపథ్యం, OLED స్క్రీన్‌లపై బ్యాటరీని ఆదా చేస్తుంది.</string>
+    <string name="dark_web_pages">డార్క్ వెబ్ పేజీలు</string>
+    <string name="dark_web_pages_desc">యాప్ డార్క్ మోడ్‌లో ఉన్నప్పుడు వెబ్‌సైట్లను కూడా ముదురుగా చేయండి. కొన్ని పేజీలు విచిత్రంగా కనిపించవచ్చు.</string>
+    <string name="indigo">ఇండిగో</string>
+    <string name="sky">ఆకాశ నీలం</string>
+    <string name="emerald">పచ్చ</string>
+    <string name="lime">నిమ్మ పచ్చ</string>
+    <string name="amber">అంబర్</string>
+    <string name="coral">పగడం</string>
+    <string name="fuchsia">ఫుక్సియా</string>
+    <string name="brown">గోధుమ</string>
+    <string name="bookmark_added">బుక్‌మార్క్ జోడించబడింది</string>
+    <string name="web_address">వెబ్ చిరునామా</string>
 </resources>
