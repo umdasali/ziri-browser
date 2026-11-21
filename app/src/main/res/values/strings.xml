@@ -644,9 +644,22 @@
     <string name="pull_to_refresh">Pull to refresh</string>
     <string name="pull_to_refresh_desc">Drag down at the top of a page to reload it</string>
     <string name="clear_on_exit">Clear on exit</string>
-    <string name="clear_on_exit_desc">Removed each time you close Ziri (or on the next start if the app was swiped away)</string>
+    <string name="clear_on_exit_desc">Removed when you close Ziri, about 5 minutes after you leave it, or on the next start.</string>
     <string name="search_tabs">Search tabs</string>
     <string name="close_other_tabs">Close other tabs</string>
     <string name="no_matching_tabs">No matching tabs</string>
     <string name="print_page">Print / save as PDF</string>
+    <string name="ask_ai">Ask AI</string>
+    <string name="tor_shield_unavailable">Tor tabs need a newer Android System WebView to stay anonymous. Update it in Google Play, then try again.</string>
+    <string name="not_isolated_notice">This phone\'s browser engine can\'t keep private tabs\' cookies separate from normal ones. Update Android System WebView.</string>
+    <string name="requests_blocked_on_page">%d requests blocked on this page</string>
+    <string name="blocking_also_off">Some blocking is also off in Settings.</string>
+    <string name="site_wants_to_use">%1$s wants to use your %2$s.</string>
+    <string name="perm_camera">camera</string>
+    <string name="perm_microphone">microphone</string>
+    <string name="perm_location">location</string>
+    <string name="no_https_notice">%s doesn\'t support HTTPS, so this page is not secure.</string>
+    <string name="tabs_open_count">%d open</string>
+    <string name="n_downloading">%d downloading</string>
+    <string name="could_harm_device">%s could harm your device. Only open files from sources you trust.</string>
 </resources>

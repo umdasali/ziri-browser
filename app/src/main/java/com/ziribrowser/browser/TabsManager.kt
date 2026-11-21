@@ -166,7 +166,7 @@ class TabsManager(
     /** Applies new privacy settings to every open tab. Call on the main thread. */
     fun setPrivacy(c: com.ziribrowser.privacy.PrivacyConfig) {
         privacy = c
-        webViews.forEach { (id, wv) -> applyPrivacy(id, wv); applyDesktop(wv, tab(id)?.desktop == true) }
+        webViews.forEach { (id, wv) -> applyPrivacy(id, wv); applyDesktop(wv, tab(id)?.desktop == true, tab(id)?.isTor == true) }
     }
 
     private fun applyPrivacy(id: String, wv: WebView) {
@@ -174,20 +174,32 @@ class TabsManager(
         val c = if (isTor) privacy.copy(fingerprintShield = true, blockThirdPartyCookies = true, safeBrowsing = false, exemptHosts = emptySet()) else privacy
         android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(wv, !c.blockThirdPartyCookies)
         wv.settings.safeBrowsingEnabled = c.safeBrowsing
-        shieldScripts.remove(id)?.remove()
+        runCatching { shieldScripts.remove(id)?.remove() }
+        var installed = false
         if (c.fingerprintShield && androidx.webkit.WebViewFeature.isFeatureSupported(androidx.webkit.WebViewFeature.DOCUMENT_START_SCRIPT)) {
             // Private tabs get their own seed, so they can't be linked to the normal session either.
             val seed = if (tab(id)?.isPrivate == true) sessionSeed + id else sessionSeed
-            runCatching {
+            installed = runCatching {
                 shieldScripts[id] = androidx.webkit.WebViewCompat.addDocumentStartJavaScript(wv, com.ziribrowser.privacy.FingerprintShield.script(seed, c.exemptHosts, torMode = isTor), setOf("*"))
+            }.isSuccess
+        }
+        // The script is what switches WebRTC off in Tor tabs (its UDP traffic would bypass Tor and reveal the real address).
+        // Without it a Tor tab must not load anything.
+        if (isTor) {
+            if (installed) torUnsafe.remove(wv) else {
+                torUnsafe.add(wv)
+                update(id) { it.copy(error = com.ziribrowser.ziriString(com.ziribrowser.R.string.tor_shield_unavailable)) }
             }
         }
     }
 
+    /** Tor tabs whose WebRTC protection could not be installed; nothing is loaded in them. */
+    private val torUnsafe: MutableSet<WebView> = java.util.Collections.newSetFromMap(java.util.WeakHashMap())
+
     private fun privacyHeaders(): Map<String, String> =
         if (privacy.sendGpc) mapOf("Sec-GPC" to "1", "DNT" to "1") else emptyMap()
 
-    private fun load(wv: WebView, url: String) = wv.loadUrl(url, privacyHeaders())
+    private fun load(wv: WebView, url: String) { if (wv !in torUnsafe) wv.loadUrl(url, privacyHeaders()) }
 
     // ---- immersive browsing: bars hide when scrolling down and return when scrolling up ----------------
     private val scrollTracker = ChromeScrollTracker()
@@ -398,8 +410,7 @@ class TabsManager(
                 val rows = list.filter { !it.isPrivate }.mapIndexed { i, t ->
                     TabEntity(t.id, t.url, t.title, i, t.desktop)
                 }
-                tabDao.clear()
-                tabDao.insertAll(rows)
+                runCatching { tabDao.replaceAll(rows) } // a full disk must not take the app down
             }
         }
         // Remember which normal tab was in front, so a restart opens the same one.
@@ -452,7 +463,8 @@ class TabsManager(
         }
         destroy(id, wipe = closed.isPrivate)
         // Last private tab gone: drop the whole private session.
-        if (closed.isPrivate && rest.none { it.isPrivate }) PrivateProfile.clear()
+        if (closed.isTor && rest.none { it.isTor }) PrivateProfile.clear(tor = true)
+        if (closed.isPrivate && !closed.isTor && rest.none { it.isPrivate && !it.isTor }) PrivateProfile.clear(tor = false)
     }
 
     /** Closes every normal tab, or every private tab, leaving the other kind alone. */
@@ -464,7 +476,10 @@ class TabsManager(
     fun closeOthers(keepId: String) {
         val keep = _tabs.value.firstOrNull { it.id == keepId } ?: return
         _tabs.value.filter { it.id != keepId && it.isPrivate == keep.isPrivate && it.isTor == keep.isTor }.map { it.id }.forEach { closeTab(it) }
-        setActive(keepId)
+        // Only take over as the current tab if the current one was among those closed (or is this kind); looking at the Private list
+        // while a normal tab is current must not quietly make a private tab current.
+        val now = tab(_activeId.value ?: "")
+        if (now == null || (now.isPrivate == keep.isPrivate && now.isTor == keep.isTor)) setActive(keepId)
     }
 
     fun closeAll() {
@@ -476,7 +491,9 @@ class TabsManager(
 
     private fun destroy(id: String, wipe: Boolean = false) {
         passwords.forget(id)
+        runCatching { shieldScripts.remove(id)?.remove() }
         webViews.remove(id)?.apply {
+            passwords.detach(id, this)
             (parent as? android.view.ViewGroup)?.removeView(this)
             stopLoading()
             if (wipe) { clearHistory(); clearCache(true); clearFormData() } // private tab: leave nothing behind
@@ -536,7 +553,7 @@ class TabsManager(
     fun proceedInsecure(id: String) {
         val p = tab(id)?.insecure ?: return
         httpFallbackHosts += p.host.lowercase()
-        update(id) { it.copy(insecure = null, url = p.url, notice = "${p.host} doesn't support HTTPS, so this page is not secure.") }
+        update(id) { it.copy(insecure = null, url = p.url, notice = ziriString(R.string.no_https_notice, p.host)) }
         webViews[id]?.let { load(it, p.url) }
     }
 
@@ -566,6 +583,7 @@ class TabsManager(
 
     /** "Back to safety": refuse the certificate and leave the page. */
     fun sslBack(id: String) {
+        upgrades.remove(id)
         cancelSsl(id)
         val bad = tab(id)?.url
         update(id) { it.copy(sslProblem = null, loading = false) }
@@ -575,6 +593,7 @@ class TabsManager(
     /** "Proceed anyway": only reachable after the user opens Advanced and confirms. */
     fun sslProceed(id: String) {
         val problem = tab(id)?.sslProblem ?: return
+        upgrades.remove(id)
         sslHandlers.remove(id)?.proceed()
         update(id) { it.copy(sslProblem = null, certOverrideHost = problem.host) }
     }
@@ -621,11 +640,12 @@ class TabsManager(
     fun toggleDesktop(id: String) {
         val t = tab(id) ?: return
         update(id) { it.copy(desktop = !t.desktop) }
-        webViews[id]?.let { applyDesktop(it, !t.desktop); it.reload() }
+        webViews[id]?.let { applyDesktop(it, !t.desktop, t.isTor); it.reload() }
     }
 
-    private fun applyDesktop(wv: WebView, desktop: Boolean) = wv.settings.run {
-        userAgentString = if (desktop) DESKTOP_UA else if (privacy.fingerprintShield) com.ziribrowser.privacy.FingerprintShield.reduceUserAgent(defaultUa) else defaultUa
+    private fun applyDesktop(wv: WebView, desktop: Boolean, tor: Boolean = false) = wv.settings.run {
+        // Tor tabs always hide the phone model, whatever the shield setting says.
+        userAgentString = if (desktop) DESKTOP_UA else if (privacy.fingerprintShield || tor) com.ziribrowser.privacy.FingerprintShield.reduceUserAgent(defaultUa) else defaultUa
         useWideViewPort = true
         loadWithOverviewMode = desktop
     }
@@ -713,8 +733,8 @@ class TabsManager(
 
     private fun createWebView(state: TabState, preset: WebView?): WebView {
         val wv = preset ?: WebView(MutableContextWrapper(webContext(appContext)))
-        val isolated = if (state.isPrivate) PrivateProfile.apply(wv) else false
-        update(state.id) { it.copy(isolated = isolated) }
+        val isolated = if (state.isPrivate) PrivateProfile.apply(wv, tor = state.isTor) else false
+        update(state.id) { it.copy(isolated = isolated, notice = if (state.isPrivate && !isolated) ziriString(R.string.not_isolated_notice) else it.notice) }
 
         wv.settings.apply {
             javaScriptEnabled = true
@@ -738,13 +758,17 @@ class TabsManager(
         }
         applyDarkWeb(wv)
         applyPrivacy(state.id, wv)
-        applyDesktop(wv, state.desktop)
+        applyDesktop(wv, state.desktop, state.isTor)
         wv.setOnScrollChangeListener { _, _, scrollY, _, oldScrollY -> onPageScrolled(state.id, scrollY, scrollY - oldScrollY) }
         wv.setFindListener { activeOrdinal, numberOfMatches, _ ->
             _find.value = FindState(if (numberOfMatches > 0) activeOrdinal + 1 else 0, numberOfMatches)
         }
         // Saved logins: never on private or Tor tabs, which keep no trace of what you type.
-        if (!state.isPrivate && !state.isTor) passwords.attach(state.id, wv) { tab(state.id)?.url.orEmpty() }
+        if (!state.isPrivate && !state.isTor) passwords.attach(state.id, wv) {
+            // After "Proceed anyway" on a bad certificate the page may be an impostor: report no address, so nothing is offered, saved or filled.
+            val t = tab(state.id)
+            if (t == null || t.certOverrideHost?.equals(UrlUtils.rawHost(t.url), ignoreCase = true) == true) "" else t.url
+        }
         wv.webViewClient = client(state.id)
         wv.webChromeClient = chromeClient(state.id)
         wv.setDownloadListener { url, ua, disposition, mime, length ->
@@ -752,7 +776,7 @@ class TabsManager(
             onDownload(
                 DownloadRequest(
                     url = url, userAgent = ua, contentDisposition = disposition, mimeType = mime,
-                    contentLength = length, cookie = PrivateProfile.cookieFor(url, t?.isPrivate == true),
+                    contentLength = length, cookie = PrivateProfile.cookieFor(url, t?.isPrivate == true, t?.isTor == true),
                     referer = t?.url.orEmpty(), isPrivate = t?.isPrivate == true,
                 ),
             )
@@ -800,12 +824,14 @@ class TabsManager(
             if (!request.isForMainFrame) return
             val tried = upgrades[id]
             val host = request.url.host
-            if (tried != null && request.url.scheme == "https" && host != null && host == UrlUtils.rawHost(tried.first)) {
+            // A refused or failed certificate on the secure address is not "this site has no HTTPS": never fall back to http after one.
+            val sslFailure = error.errorCode == android.webkit.WebViewClient.ERROR_FAILED_SSL_HANDSHAKE
+            if (tried != null && !sslFailure && request.url.scheme == "https" && host != null && host.equals(UrlUtils.rawHost(tried.first), ignoreCase = true)) {
                 // The site has no working HTTPS: open the http version, but say so.
                 upgrades.remove(id)
                 if (gateInsecure(id, tried.first)) return
                 httpFallbackHosts += host
-                update(id) { it.copy(url = tried.first, notice = "$host doesn't support HTTPS, so this page is not secure.") }
+                update(id) { it.copy(url = tried.first, notice = ziriString(R.string.no_https_notice, host)) }
                 load(view, tried.first)
             } else {
                 update(id) { it.copy(loading = false, error = ziriString(R.string.this_page_couldn_t_load, error.description)) }
@@ -865,7 +891,13 @@ class TabsManager(
 
         override fun onRenderProcessGone(view: WebView, detail: android.webkit.RenderProcessGoneDetail): Boolean {
             // The page's renderer crashed or was killed for memory; drop the WebView and rebuild it on demand.
-            webViews.remove(id)?.let { (it.parent as? android.view.ViewGroup)?.removeView(it); it.destroy() }
+            webViews.remove(id)?.let { wv ->
+                passwords.detach(id, wv)
+                runCatching { shieldScripts.remove(id)?.remove() }
+                torUnsafe.remove(wv)
+                (wv.parent as? android.view.ViewGroup)?.removeView(wv); wv.destroy()
+            }
+            if (customViewOwner == id) hideCustomView() // a video that was fullscreen must not leave a dead black overlay
             update(id) { it.copy(loading = false, error = ziriString(R.string.this_page_ran_out_of_memory_reload_to_tr)) }
             return true
         }

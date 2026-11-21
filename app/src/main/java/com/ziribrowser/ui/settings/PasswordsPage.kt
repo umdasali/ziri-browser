@@ -68,6 +68,7 @@ fun PasswordsPage(container: AppContainer, onBack: () -> Unit) {
     val store = container.passwords
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    androidx.compose.runtime.DisposableEffect(Unit) { container.secureScreen.value = true; onDispose { container.secureScreen.value = false } }
     val offer by s.passwordsOffer.collectAsStateWithLifecycle(true)
     // null until the saved choice has loaded: asking before that used the default and could prompt (or lock) wrongly.
     val needUnlockLoaded by s.passwordsUnlock.collectAsStateWithLifecycle(null as Boolean?)

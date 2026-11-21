@@ -96,8 +96,6 @@ fun HomeScreen(container: AppContainer, onOpenBrowser: () -> Unit, onNavigate: (
     val tabs by container.tabs.tabs.collectAsStateWithLifecycle()
     val activeId by container.tabs.activeId.collectAsStateWithLifecycle()
     val bookmarks by remember { container.db.bookmarks().search("") }.collectAsStateWithLifecycle(emptyList())
-    val visits by remember { container.db.history().recent(500) }.collectAsStateWithLifecycle(emptyList())
-    val mostVisited = remember(visits) { mostVisited(visits) }
     val interests by container.settings.interests.collectAsStateWithLifecycle(emptySet())
     val showFeed by container.settings.showFeed.collectAsStateWithLifecycle(true)
     val articles by container.feed.articles.collectAsStateWithLifecycle()
@@ -150,8 +148,6 @@ fun HomeScreen(container: AppContainer, onOpenBrowser: () -> Unit, onNavigate: (
                     Text(" " + stringResource(R.string.tor), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                 }
             }
-            Spacer(Modifier.width(8.dp))
-            GlassIconButton(Icons.Rounded.History, stringResource(R.string.history), { onNavigate("history") })
         }
 
         Spacer(Modifier.height(28.dp))
@@ -192,20 +188,26 @@ fun HomeScreen(container: AppContainer, onOpenBrowser: () -> Unit, onNavigate: (
             SuggestionsPanel(suggestions, onPick = { focusManager.clearFocus(); query = ""; open(it.url) })
         }
 
-        // ---- search engine icons ----------------------------------------------------------------
-        Spacer(Modifier.height(14.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            SearchEngine.entries.forEach { e ->
-                Column(
-                    Modifier.weight(1f).clip(RoundedCornerShape(14.dp)).clickable(role = androidx.compose.ui.semantics.Role.Button) { scope.launch { container.settings.setSearchEngine(e) } }.padding(vertical = 4.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    EngineIcon(e, 40.dp, selected = e == engine)
-                    Text(
-                        e.label.substringBefore(' '), fontSize = 10.sp, maxLines = 1,
-                        fontWeight = if (e == engine) FontWeight.Bold else FontWeight.Normal,
-                        color = if (e == engine) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 4.dp),
+        // ---- ask an AI assistant ------------------------------------------------------------------
+        // The search engine is already chosen from the picker in the bar above, so this row offers something different:
+        // open an AI assistant, with whatever is typed in the bar passed along as the question where the service allows it.
+        Spacer(Modifier.height(18.dp))
+        Text(stringResource(R.string.ask_ai), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, modifier = Modifier.semantics { heading() })
+        Spacer(Modifier.height(8.dp))
+        Row(Modifier.fillMaxWidth()) {
+            AiAssistants.forEach { ai ->
+                Box(Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
+                    SiteTile(
+                        ai.name, Color(ai.color),
+                        {
+                            val q = query.trim()
+                            // A service with no "ask" link (Gemini) can't receive the question, so the text stays in the bar to copy over.
+                            if (ai.ask != null || q.isEmpty()) query = ""
+                            focusManager.clearFocus(); open(ai.urlFor(q))
+                        },
+                        // Gemini's mark is drawn; the others show the icon from their own site (the same way site tiles do), a letter until it loads.
+                        compact = true,
+                        icon = { if (ai.name == "Gemini") GeminiMark(52.dp) else com.ziribrowser.ui.SiteIcon(container, ai.home, ai.name, 52.dp) },
                     )
                 }
             }
@@ -255,22 +257,6 @@ fun HomeScreen(container: AppContainer, onOpenBrowser: () -> Unit, onNavigate: (
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
 
-        // ---- most visited (from this device's history) ---------------------------------------------
-        if (mostVisited.isNotEmpty()) {
-            SectionHeader(stringResource(R.string.most_visited), action = stringResource(R.string.history)) { onNavigate("history") }
-            mostVisited.chunked(4).forEach { row ->
-                Row(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
-                    row.forEach { v ->
-                        Box(Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
-                            SiteTile(v.host.substringBeforeLast('.').substringAfterLast('.').ifEmpty { v.host }.replaceFirstChar { it.uppercase() },
-                                tileColor(v.host), { open(v.origin) }, icon = { com.ziribrowser.ui.SiteIcon(container, v.origin, v.host, 52.dp) }, caption = androidx.compose.ui.res.pluralStringResource(R.plurals.visit_count, v.count, v.count))
-                        }
-                    }
-                    repeat(4 - row.size) { Spacer(Modifier.weight(1f)) }
-                }
-            }
-        }
-
         // ---- popular worldwide -----------------------------------------------------------------------
         if (forYou.isEmpty()) {
             SectionHeader(stringResource(R.string.popular_worldwide), action = stringResource(R.string.personalise)) { onNavigate("settings/interests") }
@@ -302,16 +288,18 @@ fun HomeScreen(container: AppContainer, onOpenBrowser: () -> Unit, onNavigate: (
                 Text(if (feedLoading) stringResource(R.string.loading_the_latest_headlines) else stringResource(R.string.couldn_t_load_headlines_check_your_con),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             } else {
-                androidx.compose.foundation.lazy.LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.layout { m, c -> // let the row run edge to edge past the screen padding
-                        val extra = 20.dp.roundToPx()
-                        val p = m.measure(c.copy(maxWidth = c.maxWidth + extra * 2))
-                        layout(c.maxWidth, p.height) { p.place(-extra, 0) }
-                    },
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 20.dp),
-                ) {
-                    items(articles, key = { it.link }) { a -> ArticleCard(container, a) { open(a.link) } }
+                HeroArticle(container, articles.first()) { open(articles.first().link) }
+                val more = articles.drop(1).take(5)
+                if (more.isNotEmpty()) {
+                    Spacer(Modifier.height(12.dp))
+                    GlassSurface(shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
+                        Column {
+                            more.forEachIndexed { i, a ->
+                                if (i > 0) androidx.compose.material3.HorizontalDivider(Modifier.padding(horizontal = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                                ArticleRow(container, a) { open(a.link) }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -504,19 +492,6 @@ private fun QuickAccessDialog(
         dismissButton = { TextButton(onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }
-
-private data class Visited(val host: String, val origin: String, val count: Int)
-
-/** The sites visited most often in the last 500 history entries, most visited first. */
-private fun mostVisited(visits: List<com.ziribrowser.data.HistoryEntity>): List<Visited> =
-    visits.groupBy { UrlUtils.rawHost(it.url).removePrefix("www.") }
-        .filterKeys { it.isNotEmpty() }
-        .map { (host, list) ->
-            val origin = runCatching { java.net.URI(list.first().url).let { "${it.scheme}://${it.host}" } }.getOrDefault(list.first().url)
-            Visited(host, origin, list.size)
-        }
-        .sortedByDescending { it.count }
-        .take(8)
 
 private val tilePalette = listOf(0xFF2563EB, 0xFF16A34A, 0xFFEA580C, 0xFFDB2777, 0xFF7C3AED, 0xFF0D9488, 0xFFCA8A04, 0xFFDC2626)
 

@@ -643,9 +643,22 @@
     <string name="pull_to_refresh">টেনে রিফ্রেশ করুন</string>
     <string name="pull_to_refresh_desc">পেজের উপরে নিচের দিকে টেনে এটি আবার লোড করুন</string>
     <string name="clear_on_exit">বের হওয়ার সময় মুছুন</string>
-    <string name="clear_on_exit_desc">প্রতিবার Ziri বন্ধ করলে মুছে যায় (অ্যাপ সোয়াইপ করে বন্ধ করলে পরের বার চালু হলে)</string>
+    <string name="clear_on_exit_desc">Ziri বন্ধ করলে, ছাড়ার প্রায় ৫ মিনিট পরে, বা পরের বার চালু হলে মুছে যায়।</string>
     <string name="search_tabs">ট্যাব খুঁজুন</string>
     <string name="close_other_tabs">অন্য ট্যাব বন্ধ করুন</string>
     <string name="no_matching_tabs">কোনো মিলে যাওয়া ট্যাব নেই</string>
     <string name="print_page">প্রিন্ট / PDF হিসেবে সংরক্ষণ</string>
+    <string name="ask_ai">AI-কে জিজ্ঞাসা করুন</string>
+    <string name="tor_shield_unavailable">Tor ট্যাব বেনামি রাখতে নতুন Android System WebView দরকার। Google Play-তে আপডেট করে আবার চেষ্টা করুন।</string>
+    <string name="not_isolated_notice">এই ফোনের ব্রাউজার ইঞ্জিন প্রাইভেট ট্যাবের কুকি সাধারণ ট্যাব থেকে আলাদা রাখতে পারে না। Android System WebView আপডেট করুন।</string>
+    <string name="requests_blocked_on_page">এই পেজে %d অনুরোধ ব্লক করা হয়েছে</string>
+    <string name="blocking_also_off">কিছু ব্লকিং সেটিংসেও বন্ধ আছে।</string>
+    <string name="site_wants_to_use">%1$s আপনার %2$s ব্যবহার করতে চায়।</string>
+    <string name="perm_camera">ক্যামেরা</string>
+    <string name="perm_microphone">মাইক্রোফোন</string>
+    <string name="perm_location">লোকেশন</string>
+    <string name="no_https_notice">%s HTTPS সমর্থন করে না, তাই এই পেজ নিরাপদ নয়।</string>
+    <string name="tabs_open_count">%d টি খোলা</string>
+    <string name="n_downloading">%d টি ডাউনলোড হচ্ছে</string>
+    <string name="could_harm_device">%s আপনার ডিভাইসের ক্ষতি করতে পারে। শুধু বিশ্বস্ত উৎসের ফাইল খুলুন।</string>
 </resources>

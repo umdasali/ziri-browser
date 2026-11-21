@@ -35,6 +35,8 @@ data class PlayItem(
     val uri: Uri, val title: String, val key: String?, val downloadId: Long? = null, val mime: String? = null,
     /** Subtitle files found next to the video (same name, .srt/.vtt/.ass). */
     val subtitles: List<Uri> = emptyList(),
+    /** From a private download: its name is kept out of the lock-screen / notification media controls. */
+    val isPrivate: Boolean = false,
 )
 
 /** A list of videos or songs to play one after another, starting at [start]. */
@@ -119,8 +121,8 @@ class PlayerHolder(private val app: Application, private val container: AppConta
         p.setMediaItems(q.items.mapIndexed { i, it ->
             MediaItem.Builder().setUri(it.uri).setMediaId(i.toString())
                 .setMimeType(it.mime?.takeIf { m -> m.startsWith("video/") || m.startsWith("audio/") })
-                .setSubtitleConfigurations(it.subtitles.mapIndexed { n, u -> subtitleConfig(u, default = n == 0) })
-                .setMediaMetadata(MediaMetadata.Builder().setTitle(it.title).build()).build()
+                .setSubtitleConfigurations(it.subtitles.mapIndexed { n, u -> subtitleConfig(app, u, default = n == 0) })
+                .setMediaMetadata(MediaMetadata.Builder().setTitle(if (it.isPrivate) "Ziri" else it.title).build()).build()
         }, q.start, C.TIME_UNSET)
         p.addListener(object : Player.Listener {
             override fun onPositionDiscontinuity(old: Player.PositionInfo, new: Player.PositionInfo, reason: Int) {
@@ -165,20 +167,33 @@ class PlayerHolder(private val app: Application, private val container: AppConta
     private fun saveFor(index: Int, posMs: Long, durMs: Long?, finished: Boolean) {
         val key = queue?.items?.getOrNull(index)?.key ?: return
         if (durMs == null && !finished) return
+        // Within the first seconds the saved spot may simply not have been applied yet (it is read asynchronously): don't mistake that for "watched from the start".
+        if (posMs < 3000 && !finished && index !in restored) return
         val done = finished || (durMs != null && (posMs >= durMs - 5000 || posMs < 3000))
         container.scope.launch { container.settings.setVideoPosition(key, if (done) null else posMs / 1000.0) }
     }
 
+    /** Items whose saved position has been looked up and applied (or found to be none). */
+    private val restored: MutableSet<Int> = java.util.Collections.synchronizedSet(mutableSetOf())
+
     private fun restoreFor(index: Int) {
+        restored.remove(index)
         val key = queue?.items?.getOrNull(index)?.key ?: return
         container.scope.launch {
-            val saved = container.settings.videoPosition(key) ?: return@launch
-            if (saved > 3) withContext(Dispatchers.Main) { player?.let { if (it.currentMediaItemIndex == index && it.currentPosition < 3000) it.seekTo(index, (saved * 1000).toLong()) } }
+            try {
+                val saved = container.settings.videoPosition(key) ?: return@launch
+                if (saved > 3) withContext(Dispatchers.Main) { player?.let { if (it.currentMediaItemIndex == index && it.currentPosition < 3000) it.seekTo(index, (saved * 1000).toLong()) } }
+            } finally { restored.add(index) }
         }
     }
 
     /** Called when the player screen closes. Keeps going in the background only if asked to and still playing. */
-    fun screenClosed() {
+    /**
+     * The player screen went away. [closing] is the player that screen was showing: if the holder has moved on to a newer player (the decoder
+     * was switched, or another video replaced this one) the old screen's teardown must not release the new player.
+     */
+    fun screenClosed(closing: Player? = null) {
+        if (closing != null && closing !== player) return
         screenOpen = false
         saveCurrent()
         val p = player ?: return
@@ -281,15 +296,34 @@ class PlayerHolder(private val app: Application, private val container: AppConta
     companion object { const val END_OF_VIDEO = -1 }
 }
 
-/** The subtitle format Exo needs, guessed from the file name. */
+/**
+ * The subtitle format Exo needs. Picked and downloaded files arrive as content:// addresses with no ".vtt" in them, so the real file name is
+ * asked for, and if even that says nothing the first bytes decide (a wrong guess means no captions at all, with no error).
+ */
 @UnstableApi
-fun subtitleConfig(uri: Uri, default: Boolean): MediaItem.SubtitleConfiguration {
-    val name = (uri.lastPathSegment ?: uri.toString()).lowercase()
-    val mime = when {
-        name.endsWith(".vtt") -> androidx.media3.common.MimeTypes.TEXT_VTT
-        name.endsWith(".ass") || name.endsWith(".ssa") -> androidx.media3.common.MimeTypes.TEXT_SSA
-        name.endsWith(".ttml") || name.endsWith(".xml") -> androidx.media3.common.MimeTypes.APPLICATION_TTML
+fun subtitleMime(context: android.content.Context, uri: Uri): String {
+    fun byName(n: String) = when {
+        n.endsWith(".vtt") -> androidx.media3.common.MimeTypes.TEXT_VTT
+        n.endsWith(".ass") || n.endsWith(".ssa") -> androidx.media3.common.MimeTypes.TEXT_SSA
+        n.endsWith(".ttml") || n.endsWith(".xml") || n.endsWith(".dfxp") -> androidx.media3.common.MimeTypes.APPLICATION_TTML
+        n.endsWith(".srt") -> androidx.media3.common.MimeTypes.APPLICATION_SUBRIP
+        else -> null
+    }
+    byName((uri.lastPathSegment ?: uri.toString()).lowercase())?.let { return it }
+    if (uri.scheme == "content") {
+        runCatching {
+            context.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
+        }.getOrNull()?.lowercase()?.let { n -> byName(n)?.let { return it } }
+    }
+    val head = runCatching { context.contentResolver.openInputStream(uri)?.use { ByteArray(64).let { buf -> String(buf, 0, maxOf(it.read(buf), 0), Charsets.UTF_8) } }?.trimStart('\uFEFF', ' ', '\n', '\r') }.getOrNull().orEmpty()
+    return when {
+        head.startsWith("WEBVTT") -> androidx.media3.common.MimeTypes.TEXT_VTT
+        head.startsWith("[Script Info]", ignoreCase = true) -> androidx.media3.common.MimeTypes.TEXT_SSA
+        head.startsWith("<?xml") || head.startsWith("<tt") -> androidx.media3.common.MimeTypes.APPLICATION_TTML
         else -> androidx.media3.common.MimeTypes.APPLICATION_SUBRIP
     }
-    return MediaItem.SubtitleConfiguration.Builder(uri).setMimeType(mime).setSelectionFlags(if (default) C.SELECTION_FLAG_DEFAULT else 0).build()
 }
+
+@UnstableApi
+fun subtitleConfig(context: android.content.Context, uri: Uri, default: Boolean): MediaItem.SubtitleConfiguration =
+    MediaItem.SubtitleConfiguration.Builder(uri).setMimeType(subtitleMime(context, uri)).setSelectionFlags(if (default) C.SELECTION_FLAG_DEFAULT else 0).build()

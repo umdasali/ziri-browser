@@ -646,9 +646,22 @@
     <string name="pull_to_refresh">Tirer pour actualiser</string>
     <string name="pull_to_refresh_desc">Faites glisser vers le bas en haut d\'une page pour la recharger</string>
     <string name="clear_on_exit">Effacer à la fermeture</string>
-    <string name="clear_on_exit_desc">Supprimé à chaque fermeture de Ziri (ou au prochain démarrage si l\'appli a été fermée d\'un balayage)</string>
+    <string name="clear_on_exit_desc">Supprimé à la fermeture de Ziri, environ 5 minutes après l\'avoir quitté, ou au prochain démarrage.</string>
     <string name="search_tabs">Rechercher des onglets</string>
     <string name="close_other_tabs">Fermer les autres onglets</string>
     <string name="no_matching_tabs">Aucun onglet correspondant</string>
     <string name="print_page">Imprimer / enregistrer en PDF</string>
+    <string name="ask_ai">Demander à l\'IA</string>
+    <string name="tor_shield_unavailable">Les onglets Tor nécessitent un Android System WebView plus récent pour rester anonymes. Mettez-le à jour dans Google Play puis réessayez.</string>
+    <string name="not_isolated_notice">Le moteur de navigation de ce téléphone ne peut pas séparer les cookies des onglets privés de ceux des onglets normaux. Mettez à jour Android System WebView.</string>
+    <string name="requests_blocked_on_page">%d requêtes bloquées sur cette page</string>
+    <string name="blocking_also_off">Une partie du blocage est aussi désactivée dans les réglages.</string>
+    <string name="site_wants_to_use">%1$s veut utiliser votre %2$s.</string>
+    <string name="perm_camera">caméra</string>
+    <string name="perm_microphone">microphone</string>
+    <string name="perm_location">position</string>
+    <string name="no_https_notice">%s ne prend pas en charge HTTPS, cette page n\'est donc pas sécurisée.</string>
+    <string name="tabs_open_count">%d ouverts</string>
+    <string name="n_downloading">%d téléchargements en cours</string>
+    <string name="could_harm_device">%s pourrait endommager votre appareil. N\'ouvrez que des fichiers de sources fiables.</string>
 </resources>

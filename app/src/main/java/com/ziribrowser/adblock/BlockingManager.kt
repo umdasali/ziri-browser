@@ -75,9 +75,12 @@ class BlockingManager(
     }
 
     /** Loads the lists in the background (once). Always releases anyone waiting, even if loading fails. */
+    /** When loading last failed outright; until a minute has passed nothing retries (each request would otherwise re-parse and wait). */
+    @Volatile private var failedAt = 0L
+
     private fun ensureLoaded() {
         synchronized(this) {
-            if (ads != null || loading) return
+            if (ads != null || loading || System.currentTimeMillis() - failedAt < 60_000) return
             loading = true
             loadLatch = java.util.concurrent.CountDownLatch(1)
         }
@@ -90,6 +93,7 @@ class BlockingManager(
                     runCatching { load() }
                 }
             } finally {
+                if (ads == null) failedAt = System.currentTimeMillis()
                 loading = false
                 latch.countDown()
             }
@@ -176,7 +180,7 @@ class BlockingManager(
         if (!cfg.ads && !cfg.trackers) return null // blocking is off everywhere: nothing to check, nothing to wait for
         // Right after launch the lists may still be parsing. This runs on WebView's own network thread (not the UI),
         // so waiting briefly keeps the very first page of a session from slipping through unfiltered.
-        if (ads == null) {
+        if (ads == null && System.currentTimeMillis() - failedAt >= 60_000) {
             ensureLoaded()
             runCatching { loadLatch.await(4, TimeUnit.SECONDS) }
         }

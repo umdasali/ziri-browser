@@ -132,8 +132,10 @@ fun BrowserScreen(container: AppContainer, onClose: () -> Unit, onNavigate: (Str
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     if (tab == null) {
         // No tab open (e.g. the last one was closed): start a blank one so the user can type an address.
-        androidx.compose.runtime.LaunchedEffect(Unit) {
-            if (lifecycleOwner.lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)) tabsMgr.openTab(null)
+        // Keyed on the lifecycle state so that if this first runs while not yet resumed, it tries again once it is (instead of staying blank).
+        val lifecycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
+        androidx.compose.runtime.LaunchedEffect(lifecycleState) {
+            if (lifecycleState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)) tabsMgr.openTab(null)
         }
         return
     }
@@ -251,6 +253,13 @@ fun BrowserScreen(container: AppContainer, onClose: () -> Unit, onNavigate: (Str
                     val pullEnabled by container.settings.pullToRefresh.collectAsStateWithLifecycle(true)
                     // The spinner is shown only for the moment of the pull; the page's own progress bar takes over once it reloads.
                     var pulling by remember { mutableStateOf(false) }
+                    // The spinner follows the page's own load: it ends when the reload ends (or after a safety limit if it never starts).
+                    var sawLoading by remember { mutableStateOf(false) }
+                    androidx.compose.runtime.LaunchedEffect(tab.loading, pulling) {
+                        if (!pulling) { sawLoading = false; return@LaunchedEffect }
+                        if (tab.loading) sawLoading = true else if (sawLoading) pulling = false
+                    }
+                    androidx.compose.runtime.LaunchedEffect(pulling) { if (pulling) { kotlinx.coroutines.delay(8000); pulling = false } }
                     val web: @Composable () -> Unit = {
                         AndroidView(
                             factory = { ctx -> tabsMgr.attach(tab.id, ctx) ?: android.view.View(ctx) },
@@ -260,7 +269,7 @@ fun BrowserScreen(container: AppContainer, onClose: () -> Unit, onNavigate: (Str
                     }
                     if (pullEnabled) androidx.compose.material3.pulltorefresh.PullToRefreshBox(
                         isRefreshing = pulling,
-                        onRefresh = { pulling = true; tabsMgr.reload(tab.id); scope.launch { kotlinx.coroutines.delay(700); pulling = false } },
+                        onRefresh = { if (!tab.loading) { pulling = true; tabsMgr.reload(tab.id) } },
                         modifier = Modifier.fillMaxSize(),
                     ) { web() } else web()
                 }
@@ -497,7 +506,7 @@ DownloadStrip(container) { onNavigate("downloads") }
                     container.requestDownload(
                         DownloadRequest(
                             url = link, referer = tab.url, isPrivate = tab.isPrivate,
-                            cookie = PrivateProfile.cookieFor(link, tab.isPrivate),
+                            cookie = PrivateProfile.cookieFor(link, tab.isPrivate, tab.isTor),
                             userAgent = android.webkit.WebSettings.getDefaultUserAgent(context),
                         ),
                     )
@@ -530,7 +539,7 @@ DownloadStrip(container) { onNavigate("downloads") }
             text = {
                 Column {
                     Text(
-                        "${blockedCounts[tab.id] ?: 0} requests blocked on this page" + if (!blockCfg.ads || !blockCfg.trackers) "\nSome blocking is also off in Settings." else "",
+                        stringResource(R.string.requests_blocked_on_page, blockedCounts[tab.id] ?: 0) + if (!blockCfg.ads || !blockCfg.trackers) "\n" + stringResource(R.string.blocking_also_off) else "",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -552,19 +561,20 @@ DownloadStrip(container) { onNavigate("downloads") }
         )
     }
     pageFiles?.let { found ->
-        PageFilesDialog(container, found, tab.url, tab.isPrivate, onDismiss = { pageFiles = null })
+        PageFilesDialog(container, found, tab.url, tab.isPrivate, tab.isTor, onDismiss = { pageFiles = null })
     }
     if (showConnection) ConnectionDialog(tab, tabsMgr.connectionInfo(tab.id)) { showConnection = false }
 
     prompt?.let { p ->
         var remember by remember(p) { mutableStateOf(false) }
-        val what = p.kinds.joinToString(" and ") { it.label }
+        val kindNames = p.kinds.map { k -> stringResource(when (k) { com.ziribrowser.browser.SiteKind.CAMERA -> R.string.perm_camera; com.ziribrowser.browser.SiteKind.MICROPHONE -> R.string.perm_microphone; com.ziribrowser.browser.SiteKind.LOCATION -> R.string.perm_location }) }
+        val what = android.icu.text.ListFormatter.getInstance().format(kindNames) // "camera and microphone", in the app's language
         AlertDialog(
             onDismissRequest = { p.resolve(false, false) },
             title = { Text(stringResource(R.string.allow_2, what)) },
             text = {
                 Column {
-                    Text("${UrlUtils.host(p.origin)} wants to use your $what.")
+                    Text(stringResource(R.string.site_wants_to_use, UrlUtils.host(p.origin), what))
                     if (p.canRemember) {
                         Row(
                             Modifier.fillMaxWidth().clickable(role = androidx.compose.ui.semantics.Role.Checkbox) { remember = !remember }.padding(top = 12.dp),
@@ -692,7 +702,7 @@ private fun TorConnecting(state: com.ziribrowser.tor.TorState, onRetry: () -> Un
 
 /** Lists the pictures and files found on the page so several can be saved at once. */
 @Composable
-private fun PageFilesDialog(container: AppContainer, files: List<String>, pageUrl: String, isPrivate: Boolean, onDismiss: () -> Unit) {
+private fun PageFilesDialog(container: AppContainer, files: List<String>, pageUrl: String, isPrivate: Boolean, isTor: Boolean, onDismiss: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var chosen by remember(files) { mutableStateOf(files.toSet()) }
@@ -730,7 +740,7 @@ private fun PageFilesDialog(container: AppContainer, files: List<String>, pageUr
                 scope.launch {
                     var started = 0
                     chosen.forEach { u ->
-                        val r = container.downloads.enqueue(DownloadRequest(url = u, referer = pageUrl, cookie = PrivateProfile.cookieFor(u, isPrivate), userAgent = android.webkit.WebSettings.getDefaultUserAgent(context), isPrivate = isPrivate))
+                        val r = container.downloads.enqueue(DownloadRequest(url = u, referer = pageUrl, cookie = PrivateProfile.cookieFor(u, isPrivate, isTor), userAgent = android.webkit.WebSettings.getDefaultUserAgent(context), isPrivate = isPrivate))
                         if (r is com.ziribrowser.download.EnqueueResult.Started) started++
                     }
                     Toast.makeText(context, if (started > 0) ziriString(R.string.saving_files, started) else ziriString(R.string.nothing_new_to_save), Toast.LENGTH_SHORT).show()

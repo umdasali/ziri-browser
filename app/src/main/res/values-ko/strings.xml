@@ -640,9 +640,22 @@
     <string name="pull_to_refresh">당겨서 새로고침</string>
     <string name="pull_to_refresh_desc">페이지 맨 위에서 아래로 끌어 다시 불러옵니다</string>
     <string name="clear_on_exit">종료 시 삭제</string>
-    <string name="clear_on_exit_desc">Ziri를 닫을 때마다 삭제됩니다(앱을 밀어서 종료한 경우 다음 실행 때)</string>
+    <string name="clear_on_exit_desc">Ziri를 닫을 때, 나간 지 약 5분 후, 또는 다음 실행 때 삭제됩니다.</string>
     <string name="search_tabs">탭 검색</string>
     <string name="close_other_tabs">다른 탭 닫기</string>
     <string name="no_matching_tabs">일치하는 탭 없음</string>
     <string name="print_page">인쇄 / PDF로 저장</string>
+    <string name="ask_ai">AI에게 묻기</string>
+    <string name="tor_shield_unavailable">Tor 탭이 익명성을 유지하려면 최신 Android System WebView가 필요합니다. Google Play에서 업데이트한 뒤 다시 시도하세요.</string>
+    <string name="not_isolated_notice">이 휴대전화의 브라우저 엔진은 시크릿 탭의 쿠키를 일반 탭과 분리할 수 없습니다. Android System WebView를 업데이트하세요.</string>
+    <string name="requests_blocked_on_page">이 페이지에서 요청 %d건을 차단했습니다</string>
+    <string name="blocking_also_off">설정에서도 일부 차단이 꺼져 있습니다.</string>
+    <string name="site_wants_to_use">%1$s에서 내 %2$s을(를) 사용하려고 합니다.</string>
+    <string name="perm_camera">카메라</string>
+    <string name="perm_microphone">마이크</string>
+    <string name="perm_location">위치</string>
+    <string name="no_https_notice">%s은(는) HTTPS를 지원하지 않아 이 페이지는 안전하지 않습니다.</string>
+    <string name="tabs_open_count">%d개 열림</string>
+    <string name="n_downloading">%d개 다운로드 중</string>
+    <string name="could_harm_device">%s이(가) 기기에 해를 끼칠 수 있습니다. 신뢰할 수 있는 출처의 파일만 여세요.</string>
 </resources>

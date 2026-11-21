@@ -341,7 +341,7 @@ private fun DownloadCard(
         AlertDialog(
             onDismissRequest = { confirmOpen = false },
             title = { Text(stringResource(R.string.open_this_file)) },
-            text = { Text("${d.filename} could harm your device. Only open files from sources you trust.") },
+            text = { Text(stringResource(R.string.could_harm_device, d.filename)) },
             confirmButton = { TextButton({ confirmOpen = false; open() }) { Text(stringResource(R.string.open_anyway)) } },
             dismissButton = { TextButton({ confirmOpen = false }) { Text(stringResource(R.string.cancel)) } },
         )
@@ -369,7 +369,7 @@ private fun ActiveSummary(all: List<DownloadEntity>, live: Map<Long, com.ziribro
     GlassSurface(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), shape = RoundedCornerShape(20.dp), tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("${active.size} downloading", fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text(stringResource(R.string.n_downloading, active.size), fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 Text(if (speed > 0) FileUtils.formatSpeed(speed) else stringResource(R.string.starting), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
             }
             if (known && total > 0) LinearProgressIndicator({ (done.toFloat() / total).coerceIn(0f, 1f) }, Modifier.fillMaxWidth())

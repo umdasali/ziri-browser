@@ -640,9 +640,22 @@
     <string name="pull_to_refresh">引っ張って更新</string>
     <string name="pull_to_refresh_desc">ページの先頭で下にドラッグすると再読み込みします</string>
     <string name="clear_on_exit">終了時に消去</string>
-    <string name="clear_on_exit_desc">Ziri を閉じるたびに削除されます（アプリをスワイプで終了した場合は次回起動時）</string>
+    <string name="clear_on_exit_desc">Ziri を閉じたとき、離れて約5分後、または次回起動時に削除されます。</string>
     <string name="search_tabs">タブを検索</string>
     <string name="close_other_tabs">他のタブを閉じる</string>
     <string name="no_matching_tabs">一致するタブがありません</string>
     <string name="print_page">印刷 / PDF として保存</string>
+    <string name="ask_ai">AIに聞く</string>
+    <string name="tor_shield_unavailable">Tor タブを匿名に保つには新しい Android System WebView が必要です。Google Play で更新してからもう一度お試しください。</string>
+    <string name="not_isolated_notice">この端末のブラウザエンジンでは、プライベートタブの Cookie を通常のタブと分けて保持できません。Android System WebView を更新してください。</string>
+    <string name="requests_blocked_on_page">このページで %d 件のリクエストをブロックしました</string>
+    <string name="blocking_also_off">設定でも一部のブロックがオフになっています。</string>
+    <string name="site_wants_to_use">%1$s があなたの%2$sを使用しようとしています。</string>
+    <string name="perm_camera">カメラ</string>
+    <string name="perm_microphone">マイク</string>
+    <string name="perm_location">位置情報</string>
+    <string name="no_https_notice">%s は HTTPS に対応していないため、このページは安全ではありません。</string>
+    <string name="tabs_open_count">%d 件開いています</string>
+    <string name="n_downloading">%d 件ダウンロード中</string>
+    <string name="could_harm_device">%s は端末に害を及ぼす可能性があります。信頼できる提供元のファイルのみ開いてください。</string>
 </resources>

@@ -70,7 +70,7 @@ class SegmentedDownloader(
         onCall(call, true)
         try {
             call.execute().use { resp ->
-                if (resp.code == 200) throw RangeIgnoredException()
+                if (resp.code == 200 || resp.code == 416) throw RangeIgnoredException() // 416: the file is no longer the size we planned for
                 if (resp.code != 206) throw HttpStatusException(resp.code)
                 val buf = ByteArray(64 * 1024)
                 resp.body.byteStream().use { input ->

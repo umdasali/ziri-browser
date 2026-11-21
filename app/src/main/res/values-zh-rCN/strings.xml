@@ -640,9 +640,22 @@
     <string name="pull_to_refresh">下拉刷新</string>
     <string name="pull_to_refresh_desc">在页面顶部向下拖动即可重新加载</string>
     <string name="clear_on_exit">退出时清除</string>
-    <string name="clear_on_exit_desc">每次关闭 Ziri 时清除（若应用被划掉，则在下次启动时清除）</string>
+    <string name="clear_on_exit_desc">在你关闭 Ziri、离开约 5 分钟后，或下次启动时清除。</string>
     <string name="search_tabs">搜索标签页</string>
     <string name="close_other_tabs">关闭其他标签页</string>
     <string name="no_matching_tabs">没有匹配的标签页</string>
     <string name="print_page">打印 / 保存为 PDF</string>
+    <string name="ask_ai">询问 AI</string>
+    <string name="tor_shield_unavailable">Tor 标签页需要较新的 Android System WebView 才能保持匿名。请在 Google Play 中更新后重试。</string>
+    <string name="not_isolated_notice">此手机的浏览器引擎无法将无痕标签页的 Cookie 与普通标签页分开。请更新 Android System WebView。</string>
+    <string name="requests_blocked_on_page">此页面已拦截 %d 个请求</string>
+    <string name="blocking_also_off">部分拦截功能也在“设置”中被关闭。</string>
+    <string name="site_wants_to_use">%1$s 想使用你的%2$s。</string>
+    <string name="perm_camera">摄像头</string>
+    <string name="perm_microphone">麦克风</string>
+    <string name="perm_location">位置信息</string>
+    <string name="no_https_notice">%s 不支持 HTTPS，因此此页面不安全。</string>
+    <string name="tabs_open_count">已打开 %d 个</string>
+    <string name="n_downloading">正在下载 %d 个</string>
+    <string name="could_harm_device">%s 可能会损害你的设备。请只打开来自可信来源的文件。</string>
 </resources>

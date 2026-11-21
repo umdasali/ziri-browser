@@ -643,9 +643,22 @@
     <string name="pull_to_refresh">Zum Aktualisieren ziehen</string>
     <string name="pull_to_refresh_desc">Am Seitenanfang nach unten ziehen, um sie neu zu laden</string>
     <string name="clear_on_exit">Beim Beenden löschen</string>
-    <string name="clear_on_exit_desc">Wird bei jedem Schließen von Ziri entfernt (oder beim nächsten Start, wenn die App weggewischt wurde)</string>
+    <string name="clear_on_exit_desc">Wird beim Schließen von Ziri, etwa 5 Minuten nach dem Verlassen oder beim nächsten Start entfernt.</string>
     <string name="search_tabs">Tabs durchsuchen</string>
     <string name="close_other_tabs">Andere Tabs schließen</string>
     <string name="no_matching_tabs">Keine passenden Tabs</string>
     <string name="print_page">Drucken / als PDF speichern</string>
+    <string name="ask_ai">KI fragen</string>
+    <string name="tor_shield_unavailable">Tor-Tabs brauchen ein neueres Android System WebView, um anonym zu bleiben. Aktualisiere es in Google Play und versuche es erneut.</string>
+    <string name="not_isolated_notice">Die Browser-Engine dieses Telefons kann Cookies privater Tabs nicht von normalen trennen. Aktualisiere Android System WebView.</string>
+    <string name="requests_blocked_on_page">%d Anfragen auf dieser Seite blockiert</string>
+    <string name="blocking_also_off">Ein Teil der Blockierung ist auch in den Einstellungen aus.</string>
+    <string name="site_wants_to_use">%1$s möchte auf deine %2$s zugreifen.</string>
+    <string name="perm_camera">Kamera</string>
+    <string name="perm_microphone">Mikrofon</string>
+    <string name="perm_location">Standort</string>
+    <string name="no_https_notice">%s unterstützt kein HTTPS, daher ist diese Seite nicht sicher.</string>
+    <string name="tabs_open_count">%d geöffnet</string>
+    <string name="n_downloading">%d Downloads laufen</string>
+    <string name="could_harm_device">%s könnte dein Gerät beschädigen. Öffne nur Dateien aus vertrauenswürdigen Quellen.</string>
 </resources>

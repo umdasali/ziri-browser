@@ -25,6 +25,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -165,21 +166,23 @@ private fun Modifier.androidSize(size: androidx.compose.ui.unit.Dp) = this.then(
  * translucent fill, which looks like a faint box inside glass panels; clipping the interior out avoids that.
  */
 private fun Modifier.softShadow(shape: Shape, radius: androidx.compose.ui.unit.Dp, color: Color, dy: androidx.compose.ui.unit.Dp = 4.dp): Modifier =
-    this.drawBehind {
+    // drawWithCache: the outline and paint are rebuilt only when the size (or colour) changes, not on every frame of every panel while scrolling.
+    this.drawWithCache {
         val path = androidx.compose.ui.graphics.Path()
         when (val o = shape.createOutline(size, layoutDirection, this)) {
             is androidx.compose.ui.graphics.Outline.Rectangle -> path.addRect(o.rect)
             is androidx.compose.ui.graphics.Outline.Rounded -> path.addRoundRect(o.roundRect)
             is androidx.compose.ui.graphics.Outline.Generic -> path.addPath(o.path)
         }
-        clipPath(path, androidx.compose.ui.graphics.ClipOp.Difference) {
-            drawIntoCanvas { canvas ->
-                val paint = android.graphics.Paint().apply {
-                    isAntiAlias = true
-                    this.color = android.graphics.Color.BLACK // hidden: this fill sits inside the clipped-out interior
-                    setShadowLayer(radius.toPx(), 0f, dy.toPx(), color.toArgb())
-                }
-                canvas.nativeCanvas.drawPath(path.asAndroidPath(), paint)
+        val androidPath = path.asAndroidPath()
+        val paint = android.graphics.Paint().apply {
+            isAntiAlias = true
+            this.color = android.graphics.Color.BLACK // hidden: this fill sits inside the clipped-out interior
+            setShadowLayer(radius.toPx(), 0f, dy.toPx(), color.toArgb())
+        }
+        onDrawBehind {
+            clipPath(path, androidx.compose.ui.graphics.ClipOp.Difference) {
+                drawIntoCanvas { canvas -> canvas.nativeCanvas.drawPath(androidPath, paint) }
             }
         }
     }

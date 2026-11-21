@@ -26,7 +26,7 @@ data class PagePreview(
 
 /** Pure HTML-head parsing, kept separate from the network code so it can be unit-tested. */
 object MetaParser {
-    private val tagRe = Regex("<(meta|link)\\b[^>]*>", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+    private val tagRe = Regex("<(meta|link)\\b[^>]{0,2000}>", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
     private val attrRe = Regex("([a-zA-Z_:][-a-zA-Z0-9_:.]*)\\s*=\\s*(?:\"([^\"]*)\"|'([^']*)'|([^\\s\"'>]+))")
     private val titleRe = Regex("<title[^>]*>(.*?)</title>", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
 
@@ -119,14 +119,16 @@ class SiteMetaRepository(context: Context, private val http: OkHttpClient) {
     /** Saves the site's icon and basic info if we don't have them yet. Safe to call repeatedly. */
     suspend fun ensure(url: String) {
         val host = key(url)
-        if (!enabled || host.isEmpty() || File(dir, "$host.png").exists()) return
+        // Icons are fetched from the site's front door only, and never for plain-http or LAN addresses: asking for the exact link a person bookmarked
+        // could trigger a one-time or logout link, and pokes at devices on the home network.
+        if (!enabled || host.isEmpty() || !url.startsWith("https://", ignoreCase = true) || com.ziribrowser.browser.UrlUtils.isLocalHost(host) || File(dir, "$host.png").exists()) return
         val last = attempted[host]
         if (last != null && System.currentTimeMillis() - last < RETRY_MS) return
         attempted[host] = System.currentTimeMillis()
         gate.withPermit {
             // Some sites refuse to serve their page to an app but still serve their icon: try the standard icon locations.
             val origin = runCatching { URI(url).let { "${it.scheme}://${it.authority}" } }.getOrDefault("")
-            val p = preview(url) ?: PagePreview(url, "", "", "", null, listOf("$origin/apple-touch-icon.png", "$origin/favicon.ico"))
+            val p = preview(origin.ifEmpty { url }) ?: PagePreview(url, "", "", "", null, listOf("$origin/apple-touch-icon.png", "$origin/favicon.ico"))
             save(host, p)
         }
     }

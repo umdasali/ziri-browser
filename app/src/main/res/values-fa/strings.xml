@@ -643,9 +643,22 @@
     <string name="pull_to_refresh">کشیدن برای تازه‌سازی</string>
     <string name="pull_to_refresh_desc">برای بارگذاری دوباره، در بالای صفحه به پایین بکشید</string>
     <string name="clear_on_exit">پاک‌سازی هنگام خروج</string>
-    <string name="clear_on_exit_desc">هر بار که Ziri را می‌بندید حذف می‌شود (یا در اجرای بعدی اگر برنامه را کنار زده‌اید)</string>
+    <string name="clear_on_exit_desc">هنگام بستن Ziri، حدود ۵ دقیقه پس از ترک آن، یا در اجرای بعدی حذف می‌شود.</string>
     <string name="search_tabs">جستجوی زبانه‌ها</string>
     <string name="close_other_tabs">بستن زبانه‌های دیگر</string>
     <string name="no_matching_tabs">زبانه‌ای مطابق یافت نشد</string>
     <string name="print_page">چاپ / ذخیره به‌صورت PDF</string>
+    <string name="ask_ai">از هوش مصنوعی بپرسید</string>
+    <string name="tor_shield_unavailable">زبانه‌های Tor برای ناشناس ماندن به Android System WebView جدیدتری نیاز دارند. آن را در Google Play به‌روز کنید و دوباره تلاش کنید.</string>
+    <string name="not_isolated_notice">موتور مرورگر این گوشی نمی‌تواند کوکی‌های زبانه‌های خصوصی را از زبانه‌های عادی جدا نگه دارد. Android System WebView را به‌روز کنید.</string>
+    <string name="requests_blocked_on_page">%d درخواست در این صفحه مسدود شد</string>
+    <string name="blocking_also_off">بخشی از مسدودسازی در تنظیمات هم خاموش است.</string>
+    <string name="site_wants_to_use">%1$s می‌خواهد از %2$s شما استفاده کند.</string>
+    <string name="perm_camera">دوربین</string>
+    <string name="perm_microphone">میکروفون</string>
+    <string name="perm_location">مکان</string>
+    <string name="no_https_notice">%s از HTTPS پشتیبانی نمی‌کند، پس این صفحه امن نیست.</string>
+    <string name="tabs_open_count">%d باز</string>
+    <string name="n_downloading">%d در حال دانلود</string>
+    <string name="could_harm_device">%s ممکن است به دستگاه شما آسیب بزند. فقط فایل‌های منابع مطمئن را باز کنید.</string>
 </resources>

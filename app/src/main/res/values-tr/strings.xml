@@ -643,9 +643,22 @@
     <string name="pull_to_refresh">Yenilemek için çek</string>
     <string name="pull_to_refresh_desc">Yeniden yüklemek için sayfanın en üstünde aşağı çekin</string>
     <string name="clear_on_exit">Çıkışta temizle</string>
-    <string name="clear_on_exit_desc">Ziri\'yi her kapattığınızda silinir (uygulama kaydırılarak kapatıldıysa bir sonraki açılışta)</string>
+    <string name="clear_on_exit_desc">Ziri\'yi kapattığınızda, ayrıldıktan yaklaşık 5 dakika sonra veya bir sonraki açılışta silinir.</string>
     <string name="search_tabs">Sekmelerde ara</string>
     <string name="close_other_tabs">Diğer sekmeleri kapat</string>
     <string name="no_matching_tabs">Eşleşen sekme yok</string>
     <string name="print_page">Yazdır / PDF olarak kaydet</string>
+    <string name="ask_ai">Yapay zekaya sor</string>
+    <string name="tor_shield_unavailable">Tor sekmelerinin anonim kalması için daha yeni bir Android System WebView gerekir. Google Play\'den güncelleyip tekrar deneyin.</string>
+    <string name="not_isolated_notice">Bu telefonun tarayıcı motoru gizli sekmelerin çerezlerini normal sekmelerden ayıramıyor. Android System WebView\'i güncelleyin.</string>
+    <string name="requests_blocked_on_page">Bu sayfada %d istek engellendi</string>
+    <string name="blocking_also_off">Ayarlarda da bazı engellemeler kapalı.</string>
+    <string name="site_wants_to_use">%1$s, %2$s izninizi kullanmak istiyor.</string>
+    <string name="perm_camera">kamera</string>
+    <string name="perm_microphone">mikrofon</string>
+    <string name="perm_location">konum</string>
+    <string name="no_https_notice">%s HTTPS\'yi desteklemiyor, bu yüzden bu sayfa güvenli değil.</string>
+    <string name="tabs_open_count">%d açık</string>
+    <string name="n_downloading">%d indiriliyor</string>
+    <string name="could_harm_device">%s cihazınıza zarar verebilir. Yalnızca güvendiğiniz kaynaklardan gelen dosyaları açın.</string>
 </resources>

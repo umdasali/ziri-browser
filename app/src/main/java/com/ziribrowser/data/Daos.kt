@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface BookmarkDao {
     @Query("SELECT COUNT(*) FROM bookmarks")
-    suspend fun count(): Int
+    abstract suspend fun count(): Int
 
     @Query("SELECT * FROM bookmarks WHERE title LIKE '%' || :q || '%' ESCAPE '\\' OR url LIKE '%' || :q || '%' ESCAPE '\\' ORDER BY created_at DESC")
     fun search(q: String): Flow<List<BookmarkEntity>>
@@ -44,7 +44,7 @@ interface BookmarkDao {
 @Dao
 interface HistoryDao {
     @Query("SELECT COUNT(*) FROM history")
-    suspend fun count(): Int
+    abstract suspend fun count(): Int
 
     @Query("SELECT * FROM history WHERE title LIKE '%' || :q || '%' ESCAPE '\\' OR url LIKE '%' || :q || '%' ESCAPE '\\' ORDER BY visited_at DESC LIMIT 500")
     fun search(q: String): Flow<List<HistoryEntity>>
@@ -74,18 +74,22 @@ interface HistoryDao {
 }
 
 @Dao
-interface TabDao {
+abstract class TabDao {
     @Query("SELECT COUNT(*) FROM tabs")
-    suspend fun count(): Int
+    abstract suspend fun count(): Int
 
     @Query("SELECT * FROM tabs ORDER BY position")
-    suspend fun all(): List<TabEntity>
+    abstract suspend fun all(): List<TabEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(tabs: List<TabEntity>)
+    abstract suspend fun insertAll(tabs: List<TabEntity>)
 
     @Query("DELETE FROM tabs")
-    suspend fun clear()
+    abstract suspend fun clear()
+
+    /** Replaces the saved tabs in one transaction, so a kill between the delete and the insert can't leave none. */
+    @androidx.room.Transaction
+    open suspend fun replaceAll(tabs: List<TabEntity>) { clear(); insertAll(tabs) }
 }
 
 @Dao
@@ -121,8 +125,9 @@ interface DownloadDao {
     @Query("SELECT * FROM downloads WHERE file_uri = :uri LIMIT 1")
     suspend fun findByUri(uri: String): DownloadEntity?
 
-    @Query("SELECT * FROM downloads WHERE url = :url AND status != 'FAILED' LIMIT 1")
-    suspend fun findByUrl(url: String): DownloadEntity?
+    /** A private download is only a "duplicate" of another private one, and a normal one of another normal one. */
+    @Query("SELECT * FROM downloads WHERE url = :url AND status != 'FAILED' AND is_private = :isPrivate LIMIT 1")
+    suspend fun findByUrl(url: String, isPrivate: Boolean): DownloadEntity?
 
     @Insert
     suspend fun insert(d: DownloadEntity): Long

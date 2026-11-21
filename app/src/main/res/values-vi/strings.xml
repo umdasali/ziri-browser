@@ -640,9 +640,22 @@
     <string name="pull_to_refresh">Kéo để làm mới</string>
     <string name="pull_to_refresh_desc">Kéo xuống ở đầu trang để tải lại</string>
     <string name="clear_on_exit">Xóa khi thoát</string>
-    <string name="clear_on_exit_desc">Được xóa mỗi khi bạn đóng Ziri (hoặc ở lần mở tiếp theo nếu ứng dụng bị vuốt tắt)</string>
+    <string name="clear_on_exit_desc">Được xóa khi bạn đóng Ziri, khoảng 5 phút sau khi rời đi, hoặc ở lần mở tiếp theo.</string>
     <string name="search_tabs">Tìm tab</string>
     <string name="close_other_tabs">Đóng các tab khác</string>
     <string name="no_matching_tabs">Không có tab phù hợp</string>
     <string name="print_page">In / lưu dưới dạng PDF</string>
+    <string name="ask_ai">Hỏi AI</string>
+    <string name="tor_shield_unavailable">Tab Tor cần Android System WebView mới hơn để giữ ẩn danh. Hãy cập nhật trong Google Play rồi thử lại.</string>
+    <string name="not_isolated_notice">Công cụ trình duyệt của điện thoại này không thể tách cookie của tab riêng tư khỏi tab thường. Hãy cập nhật Android System WebView.</string>
+    <string name="requests_blocked_on_page">Đã chặn %d yêu cầu trên trang này</string>
+    <string name="blocking_also_off">Một phần chặn cũng đang tắt trong Cài đặt.</string>
+    <string name="site_wants_to_use">%1$s muốn dùng %2$s của bạn.</string>
+    <string name="perm_camera">máy ảnh</string>
+    <string name="perm_microphone">micrô</string>
+    <string name="perm_location">vị trí</string>
+    <string name="no_https_notice">%s không hỗ trợ HTTPS nên trang này không an toàn.</string>
+    <string name="tabs_open_count">%d đang mở</string>
+    <string name="n_downloading">Đang tải %d</string>
+    <string name="could_harm_device">%s có thể gây hại cho thiết bị của bạn. Chỉ mở tệp từ nguồn đáng tin cậy.</string>
 </resources>

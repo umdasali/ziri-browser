@@ -124,14 +124,14 @@ private fun PdfPages(pdf: PdfDoc, title: String, onBack: () -> Unit) {
                     contentPadding = PaddingValues(top = 84.dp, bottom = 24.dp), verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
                 ) {
                     items((0 until pdf.pageCount).toList(), key = { it }) { index ->
-                        PdfPage(pdf, index, with(density) { pageWidth.roundToPx() })
+                        PdfPage(pdf, index, with(density) { pageWidth.roundToPx() }.let { ((it + 199) / 200) * 200 }) // steps of 200 px: a pinch re-renders a page a few times, not on every tiny change
                     }
                 }
             }
         }
         ViewerTopBar(title, onBack, Modifier.align(Alignment.TopStart))
         Text(
-            "${listState.firstVisibleItemIndex + 1} / ${pdf.pageCount}", color = Color.White,
+            "${(listState.firstVisibleItemIndex + 1).coerceAtMost(maxOf(pdf.pageCount, 1))} / ${pdf.pageCount}", color = Color.White,
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 28.dp).background(Color.Black.copy(alpha = 0.55f), RoundedCornerShape(50)).padding(horizontal = 14.dp, vertical = 6.dp),
         )
     }
@@ -139,10 +139,15 @@ private fun PdfPages(pdf: PdfDoc, title: String, onBack: () -> Unit) {
 
 @Composable
 private fun PdfPage(pdf: PdfDoc, index: Int, widthPx: Int) {
-    val bitmap by produceState<ImageBitmap?>(null, index, widthPx) { value = pdf.render(index, widthPx)?.asImageBitmap() }
+    var failed by remember(index) { mutableStateOf(false) }
+    val bitmap by produceState<ImageBitmap?>(null, index, widthPx) {
+        value = pdf.render(index, widthPx)?.asImageBitmap()
+        failed = value == null && !pdf.closed
+    }
     val bmp = bitmap
     Box(Modifier.fillMaxWidth().background(Color.White), contentAlignment = Alignment.Center) {
-        if (bmp == null) Box(Modifier.fillMaxWidth().heightIn(min = 420.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(Modifier.padding(16.dp)) }
+        if (bmp == null && failed) Box(Modifier.fillMaxWidth().heightIn(min = 420.dp), contentAlignment = Alignment.Center) { Text(stringResource(R.string.can_t_open_the_file), color = Color.DarkGray) }
+        else if (bmp == null) Box(Modifier.fillMaxWidth().heightIn(min = 420.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(Modifier.padding(16.dp)) }
         else Image(bmp, stringResource(R.string.page, index + 1), Modifier.fillMaxWidth(), contentScale = ContentScale.FillWidth)
     }
 }
@@ -163,7 +168,10 @@ private class PdfDoc private constructor(private val pfd: ParcelFileDescriptor, 
             cache.get(key)?.let { return@withLock it }
             runCatching {
                 renderer.openPage(index).use { page ->
-                    val w = widthPx.coerceIn(200, 2400)
+                    // Width capped, and the whole bitmap capped at ~8 megapixels (32 MB): a very tall page must not exhaust memory.
+                    var w = widthPx.coerceIn(200, 2400)
+                    val maxW = kotlin.math.sqrt(8_000_000.0 * page.width / page.height).toInt().coerceAtLeast(200)
+                    w = minOf(w, maxW)
                     val h = (w.toFloat() * page.height / page.width).toInt().coerceAtLeast(1)
                     val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888).apply { eraseColor(AColor.WHITE) }
                     page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
@@ -175,7 +183,11 @@ private class PdfDoc private constructor(private val pfd: ParcelFileDescriptor, 
     }
 
     /** Waits for a page that is still being drawn (PdfRenderer refuses to close with a page open), then frees the file. */
+    @Volatile var closed = false
+        private set
+
     suspend fun close() {
+        closed = true
         lock.withLock {
             runCatching { renderer.close() }
             runCatching { pfd.close() }

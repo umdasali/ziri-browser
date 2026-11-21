@@ -174,10 +174,15 @@ fun MxPlayer(
     DisposableEffect(player) {
         val l = object : Player.Listener {
             override fun onPlayerError(e: PlaybackException) { error = e.message ?: ziriString(R.string.this_video_can_t_be_played) }
-            override fun onMediaItemTransition(item: MediaItem?, reason: Int) { index = player.currentMediaItemIndex }
+            override fun onMediaItemTransition(item: MediaItem?, reason: Int) {
+                index = player.currentMediaItemIndex
+                // Skipping away from a file that failed: clear the message and start the new one (an errored player sits idle until prepared).
+                error = null
+                if (player.playbackState == Player.STATE_IDLE) { player.prepare(); player.play() }
+            }
         }
         player.addListener(l)
-        onDispose { player.removeListener(l); holder.screenClosed() }
+        onDispose { player.removeListener(l); holder.screenClosed(player) }
     }
     LaunchedEffect(player) { while (true) { delay(5000); if (player.isPlaying) holder.saveCurrent() } }
 
@@ -191,11 +196,16 @@ fun MxPlayer(
         onDispose { lifecycleOwner.lifecycle.removeObserver(obs) }
     }
 
+    // Dismissing the Picture-in-Picture window (the X) leaves the app stopped while ON_STOP already ran with the window still counted as open.
+    LaunchedEffect(inPip) {
+        if (!inPip && !holder.keepBackground.value && !lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) { player.pause(); holder.saveCurrent() }
+    }
+
     // ---- UI state --------------------------------------------------------------------------------
     var controlsVisible by remember { mutableStateOf(true) }
     var locked by remember { mutableStateOf(false) }
     var lastTouch by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    var isPlaying by remember { mutableStateOf(true) }
+    var isPlaying by remember(player) { mutableStateOf(player.playWhenReady) }
     var position by remember { mutableLongStateOf(0L) }
     var duration by remember { mutableLongStateOf(0L) }
     var buffered by remember { mutableLongStateOf(0L) }
@@ -246,8 +256,10 @@ fun MxPlayer(
     LaunchedEffect(loopA, loopB) {
         val a = loopA ?: return@LaunchedEffect
         val b = loopB ?: return@LaunchedEffect
-        while (true) { delay(60); if (player.currentPosition >= b || player.currentPosition < a - 500) player.seekTo(a) }
+        while (true) { delay(60); if (player.currentPosition >= b) player.seekTo(a) }
     }
+    // A loop marks a place in one video: it ends when the next one starts.
+    LaunchedEffect(index) { loopA = null; loopB = null }
 
     DisposableEffect(landscape) {
         activity?.requestedOrientation = when (landscape) {
@@ -277,14 +289,7 @@ fun MxPlayer(
     // ---- subtitle file picker --------------------------------------------------------------------
     val pickSubtitle = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { picked ->
         if (picked != null) {
-            val name = picked.lastPathSegment.orEmpty().lowercase()
-            val subMime = when {
-                name.endsWith(".vtt") -> MimeTypes.TEXT_VTT
-                name.endsWith(".ass") || name.endsWith(".ssa") -> MimeTypes.TEXT_SSA
-                name.endsWith(".ttml") || name.endsWith(".xml") -> MimeTypes.APPLICATION_TTML
-                else -> MimeTypes.APPLICATION_SUBRIP
-            }
-            val sub = MediaItem.SubtitleConfiguration.Builder(picked).setMimeType(subMime).setSelectionFlags(C.SELECTION_FLAG_DEFAULT).build()
+            val sub = subtitleConfig(context, picked, default = true)
             val at = player.currentPosition
             val idx = player.currentMediaItemIndex
             val item = player.currentMediaItem?.buildUpon()?.setSubtitleConfigurations(listOf(sub))?.build()
@@ -595,6 +600,7 @@ fun MxPlayer(
                 Text(stringResource(R.string.this_video_can_t_be_played), color = Color.White, textAlign = TextAlign.Center)
                 Text(msg, color = Color.White.copy(alpha = 0.7f), textAlign = TextAlign.Center)
                 errorExtra { error = null; player.prepare(); player.play() }
+                Button({ error = null; player.prepare(); player.play() }) { Text(stringResource(R.string.try_again)) }
             }
         }
     }

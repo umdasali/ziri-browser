@@ -22,15 +22,22 @@ object Authenticator {
     }
 
     /** False when the phone has no screen lock or biometrics set up; then there is nothing to ask. */
-    fun available(context: Context): Boolean =
-        BiometricManager.from(context).canAuthenticate(ALLOWED) == BiometricManager.BIOMETRIC_SUCCESS
+    fun available(context: Context): Boolean = status(context) == BiometricManager.BIOMETRIC_SUCCESS
+
+    private fun status(context: Context) = BiometricManager.from(context).canAuthenticate(ALLOWED)
+
+    /** Nothing to ask only when the phone truly has no screen lock or biometrics set up. Any other status (hardware busy, update needed, unknown) is not a pass. */
+    private fun nothingToAsk(context: Context) = status(context).let {
+        it == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED || it == BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE
+    }
 
     fun recentlyUnlocked() = System.currentTimeMillis() - lastOk < GRACE_MS
 
     /** Runs [onResult] with true once the person has been verified (or no check is possible or wanted). */
     fun require(context: Context, needed: Boolean, title: String, onResult: (Boolean) -> Unit) {
         val host = activity(context)
-        if (!needed || host == null || !available(context) || recentlyUnlocked()) { onResult(true); return }
+        if (!needed || recentlyUnlocked() || nothingToAsk(context)) { onResult(true); return }
+        if (host == null || !available(context)) { onResult(false); return }
         val prompt = BiometricPrompt(host, ContextCompat.getMainExecutor(context), object : BiometricPrompt.AuthenticationCallback() {
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) { lastOk = System.currentTimeMillis(); onResult(true) }
             override fun onAuthenticationError(errorCode: Int, errString: CharSequence) { onResult(false) }

@@ -646,9 +646,22 @@
     <string name="pull_to_refresh">Puxar para atualizar</string>
     <string name="pull_to_refresh_desc">Arraste para baixo no topo da página para recarregá-la</string>
     <string name="clear_on_exit">Limpar ao sair</string>
-    <string name="clear_on_exit_desc">Removido sempre que você fecha o Ziri (ou na próxima abertura, se o app foi fechado deslizando)</string>
+    <string name="clear_on_exit_desc">Removido ao fechar o Ziri, cerca de 5 minutos depois de sair, ou na próxima abertura.</string>
     <string name="search_tabs">Pesquisar abas</string>
     <string name="close_other_tabs">Fechar outras abas</string>
     <string name="no_matching_tabs">Nenhuma aba correspondente</string>
     <string name="print_page">Imprimir / salvar como PDF</string>
+    <string name="ask_ai">Perguntar à IA</string>
+    <string name="tor_shield_unavailable">As abas Tor precisam de um Android System WebView mais recente para continuarem anônimas. Atualize no Google Play e tente de novo.</string>
+    <string name="not_isolated_notice">O mecanismo de navegação deste telefone não consegue separar os cookies das abas privadas das normais. Atualize o Android System WebView.</string>
+    <string name="requests_blocked_on_page">%d solicitações bloqueadas nesta página</string>
+    <string name="blocking_also_off">Parte do bloqueio também está desativada nas Configurações.</string>
+    <string name="site_wants_to_use">%1$s quer usar sua %2$s.</string>
+    <string name="perm_camera">câmera</string>
+    <string name="perm_microphone">microfone</string>
+    <string name="perm_location">localização</string>
+    <string name="no_https_notice">%s não oferece suporte a HTTPS, então esta página não é segura.</string>
+    <string name="tabs_open_count">%d abertas</string>
+    <string name="n_downloading">Baixando %d</string>
+    <string name="could_harm_device">%s pode danificar seu dispositivo. Abra apenas arquivos de fontes confiáveis.</string>
 </resources>

@@ -66,7 +66,7 @@ class PasswordBridge(
     }
 
     fun detach(tabId: String, wv: WebView?) {
-        scripts.remove(tabId)?.remove()
+        runCatching { scripts.remove(tabId)?.remove() }
         runCatching { wv?.let { WebViewCompat.removeWebMessageListener(it, channel) } }
         forget(tabId)
     }

@@ -237,7 +237,7 @@ private fun PrivacyPage(container: AppContainer, onBack: () -> Unit) {
             RowDivider()
             SettingRow(stringResource(R.string.site_permissions), icon = Icons.Rounded.LockOpen, subtitle = stringResource(R.string.camera_microphone_and_location_choices), onClick = { showPermissions = true })
             RowDivider()
-            SettingRow(stringResource(R.string.close_all_tabs_2), icon = Icons.Rounded.Tab, subtitle = "${tabs.size} open", onClick = { if (tabs.isNotEmpty()) closeTabs = true })
+            SettingRow(stringResource(R.string.close_all_tabs_2), icon = Icons.Rounded.Tab, subtitle = stringResource(R.string.tabs_open_count, tabs.size), onClick = { if (tabs.isNotEmpty()) closeTabs = true })
         }
     }
 
@@ -245,7 +245,7 @@ private fun PrivacyPage(container: AppContainer, onBack: () -> Unit) {
         onDismiss = { clearing = false },
         onConfirm = { history, cookies, cache ->
             clearing = false
-            if (history) scope.launch { container.db.history().clearAll() }
+            if (history) scope.launch { container.db.history().clearAll(); container.settings.clearVideoPositions() }
             if (cookies) container.tabs.clearCookiesAndSiteData()
             if (cache) container.tabs.clearCache()
             Toast.makeText(context, browsingDataClearedText, Toast.LENGTH_SHORT).show()

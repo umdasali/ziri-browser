@@ -83,12 +83,15 @@ fun TabsScreen(container: AppContainer, onOpenBrowser: () -> Unit, onHome: () ->
     val engine by container.settings.searchEngine.collectAsStateWithLifecycle(SearchEngine.GOOGLE)
 
     val activeTab = tabs.firstOrNull { it.id == activeId }
-    var torMode by remember { mutableStateOf(activeTab?.isTor == true) }
-    var privateMode by remember { mutableStateOf(activeTab?.isPrivate == true) }
+    var torMode by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(activeTab?.isTor == true) }
+    var privateMode by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(activeTab?.isPrivate == true) }
     val ofMode = tabs.filter { if (torMode) it.isTor else it.isPrivate == privateMode && !it.isTor }
     var query by remember { mutableStateOf("") }
     // Private and Tor tabs are searched too: the filter only runs on this screen and nothing is stored.
-    val shown = if (query.isBlank()) ofMode else ofMode.filter { it.title.contains(query, true) || it.url.contains(query, true) }
+    // The search box only exists with two or more tabs; a leftover query must never keep hiding tabs once the box is gone.
+    val searching = ofMode.size > 1 && query.isNotBlank()
+    androidx.compose.runtime.LaunchedEffect(privateMode, torMode) { query = "" }
+    val shown = if (!searching) ofMode else ofMode.filter { it.title.contains(query, true) || it.url.contains(query, true) }
     var url by remember { mutableStateOf("") }
 
     fun visit() {
@@ -101,8 +104,8 @@ fun TabsScreen(container: AppContainer, onOpenBrowser: () -> Unit, onHome: () ->
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
         ZiriHeader(stringResource(R.string.tabs)) {
             TextButton(
-                { shown.forEach { mgr.closeTab(it.id) }; if (mgr.tabs.value.isEmpty()) onHome() }, // nothing left anywhere: go Home
-                enabled = shown.isNotEmpty(),
+                { ofMode.forEach { mgr.closeTab(it.id) }; query = ""; if (mgr.tabs.value.isEmpty()) onHome() }, // nothing left anywhere: go Home
+                enabled = ofMode.isNotEmpty(),
             ) { Text(if (torMode) stringResource(R.string.close_tor) else if (privateMode) stringResource(R.string.close_private) else stringResource(R.string.close_all)) }
         }
 
@@ -183,7 +186,7 @@ fun TabsScreen(container: AppContainer, onOpenBrowser: () -> Unit, onHome: () ->
 
         // ---- tabs (or an empty state) -----------------------------------------------------------------
         Box(Modifier.weight(1f).fillMaxWidth()) {
-            if (shown.isEmpty() && query.isNotBlank()) {
+            if (shown.isEmpty() && searching) {
                 EmptyState(stringResource(R.string.no_matching_tabs), Icons.Rounded.Search)
             } else if (shown.isEmpty()) {
                 EmptyState(

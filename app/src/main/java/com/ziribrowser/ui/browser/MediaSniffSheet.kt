@@ -90,7 +90,7 @@ private fun MediaRow(container: AppContainer, tab: TabState, m: DetectedMedia, o
     val downloadingText = stringResource(R.string.downloading)
     val alreadyInYourDownloadsText = stringResource(R.string.already_in_your_downloads)
     val scope = rememberCoroutineScope()
-    val cookie = remember(m.url) { PrivateProfile.cookieFor(m.url, tab.isPrivate) }
+    val cookie = remember(m.url) { PrivateProfile.cookieFor(m.url, tab.isPrivate, tab.isTor) }
     val ua = remember { WebSettings.getDefaultUserAgent(context) }
     val live by container.downloads.live.collectAsStateWithLifecycle()
     var startedId by remember(m.url) { mutableLongStateOf(-1L) }

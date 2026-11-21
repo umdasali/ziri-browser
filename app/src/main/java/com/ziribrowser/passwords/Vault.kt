@@ -14,6 +14,7 @@ object Vault {
     private const val ALIAS = "ziri_vault_v1"
     private const val PROVIDER = "AndroidKeyStore"
 
+    @Synchronized // two first-time callers must not each create the key
     private fun key(): SecretKey {
         val ks = KeyStore.getInstance(PROVIDER).apply { load(null) }
         (ks.getKey(ALIAS, null) as? SecretKey)?.let { return it }

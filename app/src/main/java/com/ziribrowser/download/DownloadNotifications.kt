@@ -32,14 +32,14 @@ object DownloadNotifications {
 
     private fun openApp(context: Context): PendingIntent = PendingIntent.getActivity(
         context, 0,
-        Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP).putExtra(MainActivity.EXTRA_OPEN_DOWNLOADS, true),
+        Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP).putExtra(MainActivity.EXTRA_OPEN_DOWNLOADS, true).putExtra(MainActivity.EXTRA_TOKEN, com.ziribrowser.IntentToken.get(context)),
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
     )
 
     /** Tapping a finished video/picture/PDF notification opens it in Ziri's own viewer. */
     private fun openViewer(context: Context, id: Long): PendingIntent = PendingIntent.getActivity(
         context, 100_000 + id.toInt(),
-        Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP).putExtra(MainActivity.EXTRA_VIEW_DOWNLOAD, id),
+        Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP).putExtra(MainActivity.EXTRA_VIEW_DOWNLOAD, id).putExtra(MainActivity.EXTRA_TOKEN, com.ziribrowser.IntentToken.get(context)),
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
     )
 
@@ -68,7 +68,7 @@ object DownloadNotifications {
     @SuppressLint("MissingPermission") // canNotify() checks that notifications are allowed
     fun completed(context: Context, d: DownloadEntity) {
         if (!canNotify(context)) return
-        val view = Intent(Intent.ACTION_VIEW).setDataAndType(Uri.parse(d.fileUri), d.mimeType)
+        val view = Intent(Intent.ACTION_VIEW).setDataAndType(Uri.parse(d.fileUri), FileUtils.effectiveMime(d.filename, d.mimeType))
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
         // Risky file types open the app instead, where the user is warned first.
         val tap = if (FileUtils.isViewableInApp(d.category, d.mimeType, d.filename)) openViewer(context, d.id)
@@ -77,7 +77,7 @@ object DownloadNotifications {
         val n = NotificationCompat.Builder(context, CHANNEL_DONE)
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
             .setContentTitle(ziriString(R.string.download_complete))
-            .setContentText(d.filename)
+            .setContentText(if (d.isPrivate) ziriString(R.string.private_text_2) else d.filename)
             .setContentIntent(tap)
             .setAutoCancel(true)
             .build()
@@ -90,7 +90,7 @@ object DownloadNotifications {
         val n = NotificationCompat.Builder(context, CHANNEL_DONE)
             .setSmallIcon(android.R.drawable.stat_notify_error)
             .setContentTitle(ziriString(R.string.download_failed))
-            .setContentText(d.filename)
+            .setContentText(if (d.isPrivate) ziriString(R.string.private_text_2) else d.filename)
             .setContentIntent(openApp(context))
             .setAutoCancel(true)
             .build()

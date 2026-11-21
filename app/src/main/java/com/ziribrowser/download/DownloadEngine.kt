@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import okhttp3.Headers
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import java.nio.channels.FileChannel
 import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicLong
@@ -119,6 +120,12 @@ class DownloadEngine(
         .readTimeout(30, TimeUnit.SECONDS)
         .followRedirects(true)
         .followSslRedirects(true)
+        // The login cookie belongs to the site the download started on. After a redirect to another host (a CDN, an open redirect) it must not follow.
+        .addNetworkInterceptor { chain ->
+            val origin = chain.call().request().url.host
+            val req = chain.request()
+            chain.proceed(if (req.url.host != origin && req.header("Cookie") != null) req.newBuilder().removeHeader("Cookie").build() else req)
+        }
         // Refuse a redirect from https down to plain http.
         .addInterceptor { chain ->
             val response = chain.proceed(chain.request())
@@ -150,7 +157,7 @@ class DownloadEngine(
             return EnqueueResult.Rejected(ziriString(R.string.only_http_and_https_downloads_are_suppor))
         }
         if (torWanted() && torGate?.invoke() == null) return EnqueueResult.Rejected(ziriString(R.string.tor_isn_t_connected_yet_try_again_in_a_m))
-        if (!allowDuplicate) dao.findByUrl(req.url)?.let { return EnqueueResult.Duplicate(it) }
+        if (!allowDuplicate) dao.findByUrl(req.url, req.isPrivate)?.let { return EnqueueResult.Duplicate(it) }
 
         var filename: String
         var mime: String
@@ -164,7 +171,7 @@ class DownloadEngine(
                 // IOException, or IllegalArgumentException when OkHttp refuses a malformed host that Uri.parse accepted.
                 return EnqueueResult.Rejected(e.message ?: ziriString(R.string.this_video_can_t_be_downloaded))
             }
-            val base = req.title?.let { FileUtils.sanitizeFilename(it, "video").take(80) } ?: "video"
+            val base = req.title?.let { FileUtils.takeBytes(FileUtils.sanitizeFilename(it, "video"), 120) } ?: "video"
             filename = if (plan.fragmentedMp4) "$base.mp4" else "$base.ts"
             mime = if (plan.fragmentedMp4) "video/mp4" else "video/mp2t"
         } else {
@@ -176,28 +183,37 @@ class DownloadEngine(
             }
             if (!req.title.isNullOrBlank()) {
                 val ext = FileUtils.extOf(filename).ifEmpty { MimeTypeMap.getSingleton().getExtensionFromMimeType(mime).orEmpty() }
-                filename = FileUtils.sanitizeFilename(req.title, "video").take(80) + if (ext.isNotEmpty()) ".$ext" else ""
+                filename = FileUtils.takeBytes(FileUtils.sanitizeFilename(req.title, "video"), 120) + if (ext.isNotEmpty()) ".$ext" else ""
             }
         }
         val category = FileUtils.categoryOf(filename, mime)
 
         if (req.contentLength > 0) {
-            val free = StatFs(Environment.getExternalStorageDirectory().path).availableBytes
-            if (free < req.contentLength + 16L * 1024 * 1024) {
+            val free = runCatching { StatFs(Environment.getExternalStorageDirectory().path).availableBytes }.getOrNull()
+            if (free != null && free < req.contentLength + 16L * 1024 * 1024) {
                 return EnqueueResult.Rejected(ziriString(R.string.not_enough_free_storage_for_this_file))
             }
         }
 
-        val target = withContext(Dispatchers.IO) { createPendingFile(filename, mime, category) }
+        // MediaStore can refuse (unmounted storage, a name it can't make unique, a revoked permission); that is a message, not a crash.
+        val target = withContext(Dispatchers.IO) { runCatching { createPendingFile(filename, mime, category) }.getOrNull() }
             ?: return EnqueueResult.Rejected(ziriString(R.string.could_not_create_the_file_in_your_downlo))
 
-        val id = dao.insert(
-            DownloadEntity(
-                filename = target.second, url = req.url, mimeType = mime, category = category.name,
-                fileSize = req.contentLength, fileUri = target.first.toString(), cookie = "", // login cookies are never written to the database
-                userAgent = req.userAgent, referer = if (req.isPrivate) "" else req.referer, isPrivate = req.isPrivate,
-            ),
-        )
+        val id = try {
+            dao.insert(
+                DownloadEntity(
+                    filename = target.second, url = req.url, mimeType = mime, category = category.name,
+                    fileSize = req.contentLength, fileUri = target.first.toString(), cookie = "", // login cookies are never written to the database
+                    userAgent = req.userAgent, referer = if (req.isPrivate) "" else req.referer, isPrivate = req.isPrivate,
+                ),
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // The hidden file would otherwise be left behind with no row to ever clean it up.
+            runCatching { context.contentResolver.delete(target.first, null, null) }
+            return EnqueueResult.Rejected(ziriString(R.string.could_not_create_the_file_in_your_downlo))
+        }
         // The cookie (and a private download's referer) stay in memory only: a download that must resume after the app
         // was closed may have to be restarted, which is the price of not keeping logins on disk.
         privateAuth[id] = req.cookie to (if (req.isPrivate) req.referer else req.referer)
@@ -213,6 +229,8 @@ class DownloadEngine(
             put(MediaStore.Downloads.MIME_TYPE, mime)
             put(MediaStore.Downloads.RELATIVE_PATH, "${Environment.DIRECTORY_DOWNLOADS}/Ziri/${category.folder}")
             put(MediaStore.Downloads.IS_PENDING, 1)
+            // Android drops "pending" files after about a week; a paused download may legitimately wait longer than that.
+            put(MediaStore.MediaColumns.DATE_EXPIRES, System.currentTimeMillis() / 1000 + 365L * 24 * 3600)
         }
         val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return null
         val finalName = resolver.query(uri, arrayOf(MediaStore.Downloads.DISPLAY_NAME), null, null, null)?.use {
@@ -333,8 +351,11 @@ class DownloadEngine(
             var attempt = 0
             var written: Long
             while (true) {
+                val before = dao.get(id)?.downloadedSize ?: 0L
                 try {
                     awaitNetwork()
+                    // "Wi-Fi only" is checked on every (re)start, not just when the job was queued.
+                    while (wifiOnly && isMetered()) { currentCoroutineContext().ensureActive(); delay(4000) }
                     written = transfer(id, uri)
                     break
                 } catch (e: CancellationException) {
@@ -344,7 +365,12 @@ class DownloadEngine(
                     forceSingle.add(id)
                     dao.get(id)?.let { dao.update(it.copy(parts = "", canResume = false, downloadedSize = 0, error = "")) }
                 } catch (e: IOException) {
-                    if (stopReason.containsKey(id) || !isRetryableDownloadError(e) || attempt >= MAX_RETRIES) throw e
+                    // A download that kept making progress between drops isn't "failing": only count attempts that got nowhere.
+                    if ((dao.get(id)?.downloadedSize ?: 0L) > before) attempt = 0
+                    val local = e is javax.net.ssl.SSLException || e.message?.let { m ->
+                        m.contains("ENOSPC") || m.contains("No space left", true) || m.contains("Cannot write", true) || m.contains("was removed", true) || m.contains("blocked", true)
+                    } == true
+                    if (stopReason.containsKey(id) || local || !isRetryableDownloadError(e) || attempt >= MAX_RETRIES) throw e
                     attempt++
                     val wait = minOf(30, 2 shl (attempt - 1))
                     dao.get(id)?.let { dao.update(it.copy(status = DownloadStatus.DOWNLOADING, error = ziriString(R.string.retrying_in_s_of, wait, attempt, MAX_RETRIES))) }
@@ -359,7 +385,7 @@ class DownloadEngine(
                 completedAt = System.currentTimeMillis(), error = "", parts = "",
             )
             dao.update(finished)
-            DownloadNotifications.completed(context, finished)
+            runCatching { DownloadNotifications.completed(context, finished) } // a notification problem must not turn a finished download into a failed one
         } catch (e: CancellationException) {
             withContext(NonCancellable) {
                 when (stopReason.remove(id)) {
@@ -379,7 +405,7 @@ class DownloadEngine(
                 } else {
                     val failed = (dao.get(id) ?: d).copy(
                         status = DownloadStatus.FAILED,
-                        error = if (e.message?.contains("ENOSPC") == true || e.message?.contains("No space left", true) == true) "Not enough free storage" else e.message?.take(200) ?: "Download failed",
+                        error = if (e.message?.contains("ENOSPC") == true || e.message?.contains("No space left", true) == true) ziriString(R.string.not_enough_free_storage_for_this_file) else e.message?.take(200) ?: ziriString(R.string.download_failed),
                     )
                     dao.update(failed)
                     DownloadNotifications.failed(context, failed)
@@ -443,6 +469,11 @@ class DownloadEngine(
         addCall(id, call) // pause()/remove() cancel the call directly so a blocked read ends at once
         try {
             call.execute().use { resp ->
+                if (resp.code == 416 && resumeFrom > 0) {
+                    // "Range not satisfiable": either everything is already here (paused just as it finished), or the file changed on the server.
+                    if (d.fileSize == resumeFrom) return@use
+                    throw RangeIgnoredException()
+                }
                 if (!resp.isSuccessful) throw HttpStatusException(resp.code)
                 val body = resp.body
                 // A server that ignores Range answers 200 with the whole file: start again from zero.
@@ -461,6 +492,15 @@ class DownloadEngine(
                 var sampleB = written
                 var speed = 0L
                 val buf = ByteArray(64 * 1024)
+                // The stored progress is saved every few seconds, so after a crash the file can be longer than it says. Cut it back to
+                // exactly where this request starts, then append.
+                if (startAt > 0) {
+                    val pfd = resolver.openFileDescriptor(uri, "rw") ?: throw IOException("Cannot write to the Downloads folder")
+                    pfd.use {
+                        if (it.statSize in 0 until startAt) throw RangeIgnoredException() // the file is shorter than the saved progress: start over
+                        java.io.FileOutputStream(it.fileDescriptor).channel.truncate(startAt)
+                    }
+                }
                 val out = resolver.openOutputStream(uri, if (startAt > 0) "wa" else "wt")
                     ?: throw IOException("Cannot write to the Downloads folder")
                 out.use { os ->
@@ -589,7 +629,11 @@ class DownloadEngine(
                 fun launchMore() {
                     while (pending.size < window && next < items.size) {
                         val seg = items[next++]
-                        pending += async(Dispatchers.IO) { HlsDownloader.fetchSegment(client, seg, headers, keys) }
+                        pending += async(Dispatchers.IO) {
+                            // A segment or key on a different host than the playlist gets no login cookie.
+                            val segHeaders = if (seg.url.toHttpUrlOrNull()?.host == d.url.toHttpUrlOrNull()?.host) headers else headers.newBuilder().removeAll("Cookie").build()
+                            HlsDownloader.fetchSegment(client, seg, segHeaders, keys)
+                        }
                     }
                 }
                 launchMore()
@@ -676,8 +720,12 @@ class DownloadEngine(
         cancelCalls(id)
         jobs[id]?.cancelAndJoinQuietly()
         stopReason.remove(id)
-        runCatching { context.contentResolver.delete(Uri.parse(d.fileUri), null, null) }
-        dao.delete(d)
+        withContext(NonCancellable) {
+            runCatching { context.contentResolver.delete(Uri.parse(d.fileUri), null, null) }
+            dao.delete(d)
+            privateAuth.remove(id)
+            runCatching { androidx.core.app.NotificationManagerCompat.from(context).cancel(10_000 + id.toInt()) }
+        }
     }
 
     private suspend fun Job.cancelAndJoinQuietly() {
@@ -686,7 +734,7 @@ class DownloadEngine(
     }
 
     fun openIntent(d: DownloadEntity): Intent =
-        Intent(Intent.ACTION_VIEW).setDataAndType(Uri.parse(d.fileUri), d.mimeType)
+        Intent(Intent.ACTION_VIEW).setDataAndType(Uri.parse(d.fileUri), FileUtils.effectiveMime(d.filename, d.mimeType))
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
 
     private companion object {

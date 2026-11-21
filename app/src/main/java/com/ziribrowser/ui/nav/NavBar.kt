@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -62,7 +63,7 @@ private fun NavBarItem(item: NavItem, selected: Boolean, onClick: () -> Unit) {
             .height(48.dp)
             // A background in the pill shape, not clip(): clipping cut off the corners of the tab-count badge.
             .background(if (selected) scheme.primary.copy(alpha = 0.16f) else androidx.compose.ui.graphics.Color.Transparent, CircleShape)
-            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick)
+            .selectable(selected = selected, role = androidx.compose.ui.semantics.Role.Tab, interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick)
             // animateContentSize clips to its bounds, so it goes before the padding: the badge overhangs the icon into the padding
             // area and was being cut off when the clip hugged the icon.
             .animateContentSize(tween(250))
@@ -70,7 +71,7 @@ private fun NavBarItem(item: NavItem, selected: Boolean, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         BadgedBox(badge = { if (item.badge > 0) Badge { Text("${item.badge}") } }) {
-            Icon(item.icon, item.label, tint = tint)
+            Icon(item.icon, if (selected) null else item.label, tint = tint) // the visible label already names the selected one
         }
         AnimatedVisibility(selected, enter = fadeIn(tween(200)) + expandHorizontally(tween(250)), exit = fadeOut(tween(100)) + shrinkHorizontally(tween(250))) {
             Row {

@@ -656,9 +656,22 @@
     <string name="pull_to_refresh">السحب للتحديث</string>
     <string name="pull_to_refresh_desc">اسحب للأسفل من أعلى الصفحة لإعادة تحميلها</string>
     <string name="clear_on_exit">المسح عند الخروج</string>
-    <string name="clear_on_exit_desc">يُحذف في كل مرة تغلق فيها Ziri (أو عند التشغيل التالي إذا أُغلق التطبيق بالسحب)</string>
+    <string name="clear_on_exit_desc">تُحذف عند إغلاق Ziri، أو بعد نحو 5 دقائق من مغادرته، أو عند التشغيل التالي.</string>
     <string name="search_tabs">بحث في علامات التبويب</string>
     <string name="close_other_tabs">إغلاق علامات التبويب الأخرى</string>
     <string name="no_matching_tabs">لا توجد علامات تبويب مطابقة</string>
     <string name="print_page">طباعة / حفظ بصيغة PDF</string>
+    <string name="ask_ai">اسأل الذكاء الاصطناعي</string>
+    <string name="tor_shield_unavailable">تحتاج علامات تبويب Tor إلى إصدار أحدث من Android System WebView لتبقى مجهولة. حدّثه من Google Play ثم أعد المحاولة.</string>
+    <string name="not_isolated_notice">لا يستطيع محرك المتصفح في هذا الهاتف فصل ملفات تعريف الارتباط للتبويبات الخاصة عن العادية. حدّث Android System WebView.</string>
+    <string name="requests_blocked_on_page">تم حظر %d طلبات في هذه الصفحة</string>
+    <string name="blocking_also_off">بعض الحظر متوقف أيضًا في الإعدادات.</string>
+    <string name="site_wants_to_use">يريد %1$s استخدام %2$s لديك.</string>
+    <string name="perm_camera">الكاميرا</string>
+    <string name="perm_microphone">الميكروفون</string>
+    <string name="perm_location">الموقع</string>
+    <string name="no_https_notice">%s لا يدعم HTTPS، لذا هذه الصفحة غير آمنة.</string>
+    <string name="tabs_open_count">%d مفتوحة</string>
+    <string name="n_downloading">جارٍ تنزيل %d</string>
+    <string name="could_harm_device">قد يضر %s بجهازك. افتح الملفات من مصادر موثوقة فقط.</string>
 </resources>

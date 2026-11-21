@@ -17,11 +17,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.withContext
 
 /** Hand-rolled dependency container: one instance for the whole process. */
 class AppContainer(app: Application) {
-    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    // A failed background job (full disk, damaged store) must not kill the app; it is dropped and the rest keeps running.
+    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default + kotlinx.coroutines.CoroutineExceptionHandler { _, e -> android.util.Log.w("Ziri", "background task failed", e) })
     val db = AppDatabase.create(app)
     val settings = SettingsRepository(app)
     val downloads = DownloadEngine(app, db.downloads(), scope)
@@ -35,6 +37,7 @@ class AppContainer(app: Application) {
      */
     val http: okhttp3.OkHttpClient = okhttp3.OkHttpClient.Builder()
         .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS).readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+        .callTimeout(90, java.util.concurrent.TimeUnit.SECONDS) // a server that drips bytes can't hold a request (and the feed refresh lock) forever
         .proxySelector(object : java.net.ProxySelector() {
             override fun select(uri: java.net.URI?): List<java.net.Proxy> = listOf(if (tor.wanted) tor.downloadProxy() ?: java.net.Proxy.NO_PROXY else java.net.Proxy.NO_PROXY)
             override fun connectFailed(uri: java.net.URI?, sa: java.net.SocketAddress?, ioe: java.io.IOException?) {}
@@ -69,6 +72,8 @@ class AppContainer(app: Application) {
 
     /** True while a private tab is on screen, so the status/navigation bar icons switch to light-on-dark. */
     val forceDarkBars = MutableStateFlow(false)
+    /** True while a screen showing secrets (the saved passwords) is up: no screenshots, blank recents thumbnail. */
+    val secureScreen = MutableStateFlow(false)
 
     /** True while the activity is shown as a floating Picture-in-Picture window. */
     val pipMode = MutableStateFlow(false)
@@ -106,25 +111,49 @@ class AppContainer(app: Application) {
         scope.launch { settings.fetchIcons.collect { siteMeta.enabled = it } }
         scope.launch { settings.webTextZoom.collect { z -> withContext(Dispatchers.Main) { tabs.setTextZoom(z) } } }
         scope.launch {
-            // Someone who already used Ziri before this screen existed shouldn't be asked on update.
+            runCatching { downloads.recover() }
+            // Leftovers from a session that ended without a clean exit (swiped away from recents) go before any page loads.
+            runCatching { clearOnExit(cookies = false) } // cookies were already cleared above, before any page could load
+            runCatching { tabs.restore() }
+        }
+        // Cookies go first and right here, before MainActivity opens a tab for a link that started the app: wiping them later would
+        // sign the person out of the very page they were just sent to.
+        runCatching { if (kotlinx.coroutines.runBlocking { settings.exitClearNow() }.cookies) tabs.clearCookiesAndSiteData() }
+    }
+
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val delayedClear = Runnable { scope.launch { runCatching { clearOnExit() } } }
+
+    /** Called when the app leaves the screen. Android often keeps the process alive instead of closing it, so the wipe runs after a quiet spell. */
+    fun scheduleClearOnExit() {
+        handler.removeCallbacks(delayedClear)
+        handler.postDelayed(delayedClear, EXIT_CLEAR_DELAY_MS)
+    }
+
+    /** Called when the app comes back: the person is still here, so nothing is wiped. */
+    fun cancelClearOnExit() = handler.removeCallbacks(delayedClear)
+
+    /**
+     * Whether the welcome screen is finished. Someone who already used Ziri before that screen existed is marked done *before* the first value
+     * is emitted, so an update never flashes the welcome screen at them.
+     */
+    val onboardingDone: kotlinx.coroutines.flow.Flow<Boolean> = kotlinx.coroutines.flow.flow {
+        runCatching {
             if (!settings.onboardingSeen() && (db.history().count() > 0 || db.bookmarks().count() > 0 || db.tabs().count() > 0)) settings.finishOnboarding(emptySet())
         }
-        scope.launch {
-            downloads.recover()
-            // Leftovers from a session that ended without a clean exit (swiped away from recents) go before any page loads.
-            runCatching { clearOnExit() }
-            tabs.restore()
-        }
+        emitAll(settings.onboardingDone)
     }
 
     /** Wipes whatever "Clear on exit" is set to remove. Safe to call more than once. */
-    suspend fun clearOnExit() {
+    suspend fun clearOnExit(cookies: Boolean = true) {
         val c = settings.exitClearNow()
         if (!c.any) return
-        if (c.history) db.history().clearAll()
+        if (c.history) { db.history().clearAll(); settings.clearVideoPositions() }
         withContext(Dispatchers.Main) {
-            if (c.cookies) tabs.clearCookiesAndSiteData()
+            if (c.cookies && cookies) tabs.clearCookiesAndSiteData()
             if (c.cache) tabs.clearCache()
         }
     }
+
+    private companion object { const val EXIT_CLEAR_DELAY_MS = 5 * 60 * 1000L }
 }

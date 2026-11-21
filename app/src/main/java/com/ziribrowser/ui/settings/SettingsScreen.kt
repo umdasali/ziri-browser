@@ -90,7 +90,7 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(container: AppContainer, onNavigate: (String) -> Unit) {
     val s = container.settings
     val scope = rememberCoroutineScope()
-    val mode by s.themeMode.collectAsStateWithLifecycle(ThemeMode.SYSTEM)
+    val mode by s.themeMode.collectAsStateWithLifecycle(ThemeMode.LIGHT)
     val amoled by s.amoled.collectAsStateWithLifecycle(false)
     val darkWeb by s.darkWeb.collectAsStateWithLifecycle(false)
     val color by s.themeColor.collectAsStateWithLifecycle(ThemeColor.TEAL)

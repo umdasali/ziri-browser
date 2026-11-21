@@ -159,7 +159,8 @@ class VideoController(
                 "r:v.playbackRate,w:v.videoWidth,h:v.videoHeight});})()"
 
         private fun restoreJs(pos: Double) =
-            "(function(){var n=0,done=false;var iv=setInterval(function(){var v=document.querySelector('video');" +
+            "(function(){var n=0,done=false;var iv=setInterval(function(){$PICK" + // the same video the controls act on, not a preview or ad that comes first
+                "if(!v){if(++n>40)clearInterval(iv);return}" +
                 "if(v&&v.readyState>=1&&isFinite(v.duration)&&!done){done=true;" +
                 "if(v.currentTime<5&&$pos<v.duration-15){v.currentTime=$pos}clearInterval(iv)}" +
                 "if(++n>40)clearInterval(iv)},500)})()"

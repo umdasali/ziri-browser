@@ -640,9 +640,22 @@
     <string name="pull_to_refresh">ดึงเพื่อรีเฟรช</string>
     <string name="pull_to_refresh_desc">ลากลงที่ด้านบนของหน้าเพื่อโหลดใหม่</string>
     <string name="clear_on_exit">ล้างเมื่อออก</string>
-    <string name="clear_on_exit_desc">ลบทุกครั้งที่ปิด Ziri (หรือเมื่อเปิดครั้งถัดไปหากปัดแอปทิ้ง)</string>
+    <string name="clear_on_exit_desc">ลบเมื่อคุณปิด Ziri, ประมาณ 5 นาทีหลังจากออก หรือเมื่อเปิดครั้งถัดไป</string>
     <string name="search_tabs">ค้นหาแท็บ</string>
     <string name="close_other_tabs">ปิดแท็บอื่น</string>
     <string name="no_matching_tabs">ไม่พบแท็บที่ตรงกัน</string>
     <string name="print_page">พิมพ์ / บันทึกเป็น PDF</string>
+    <string name="ask_ai">ถาม AI</string>
+    <string name="tor_shield_unavailable">แท็บ Tor ต้องใช้ Android System WebView เวอร์ชันใหม่เพื่อให้ไม่เปิดเผยตัวตน อัปเดตใน Google Play แล้วลองอีกครั้ง</string>
+    <string name="not_isolated_notice">เอนจินเบราว์เซอร์ของโทรศัพท์เครื่องนี้แยกคุกกี้ของแท็บส่วนตัวออกจากแท็บปกติไม่ได้ โปรดอัปเดต Android System WebView</string>
+    <string name="requests_blocked_on_page">บล็อก %d คำขอในหน้านี้</string>
+    <string name="blocking_also_off">การบล็อกบางส่วนปิดอยู่ในการตั้งค่าด้วย</string>
+    <string name="site_wants_to_use">%1$s ต้องการใช้%2$sของคุณ</string>
+    <string name="perm_camera">กล้อง</string>
+    <string name="perm_microphone">ไมโครโฟน</string>
+    <string name="perm_location">ตำแหน่ง</string>
+    <string name="no_https_notice">%s ไม่รองรับ HTTPS หน้านี้จึงไม่ปลอดภัย</string>
+    <string name="tabs_open_count">เปิดอยู่ %d</string>
+    <string name="n_downloading">กำลังดาวน์โหลด %d</string>
+    <string name="could_harm_device">%s อาจเป็นอันตรายต่ออุปกรณ์ของคุณ เปิดเฉพาะไฟล์จากแหล่งที่เชื่อถือได้</string>
 </resources>

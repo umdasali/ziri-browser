@@ -51,14 +51,16 @@ fun HistoryScreen(container: AppContainer, onBack: () -> Unit, onOpenBrowser: ()
     val dao = container.db.history()
     val scope = rememberCoroutineScope()
     var query by remember { mutableStateOf("") }
-    val items by remember(query) { dao.search(UrlUtils.likeEscape(query)) }.collectAsStateWithLifecycle(emptyList())
+    val loaded by remember(query) { dao.search(UrlUtils.likeEscape(query)) }.collectAsStateWithLifecycle(null as List<com.ziribrowser.data.HistoryEntity>?)
+    val items = loaded ?: emptyList()
     var clearing by remember { mutableStateOf(false) }
     val fmt = remember { DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT) }
 
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
         ZiriHeader(stringResource(R.string.history), onBack) { TextButton({ clearing = true }) { Text(stringResource(R.string.clear)) } }
         ZiriSearchField(query, { query = it }, stringResource(R.string.search_history))
-        if (items.isEmpty()) EmptyState(stringResource(R.string.no_history), Icons.Rounded.History)
+        // Not before the first answer from the database (that flashed "No history"), and a search with no hits says so instead.
+        if (loaded != null && items.isEmpty()) EmptyState(stringResource(if (query.isNotBlank()) R.string.no_matches else R.string.no_history), Icons.Rounded.History)
         LazyColumn(Modifier.weight(1f), contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = LocalBarClearance.current)) {
             items(items, key = { it.id }) { h ->
                 Row(
@@ -67,7 +69,7 @@ fun HistoryScreen(container: AppContainer, onBack: () -> Unit, onOpenBrowser: ()
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text(h.title, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(h.title.ifEmpty { h.url }, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(
                             "${fmt.format(Date(h.visitedAt))} · ${h.url}", maxLines = 1, overflow = TextOverflow.Ellipsis,
                             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall,

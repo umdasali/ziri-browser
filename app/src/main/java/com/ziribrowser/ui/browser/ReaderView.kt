@@ -139,7 +139,7 @@ fun ReaderView(container: AppContainer, article: Article, isPrivate: Boolean, on
                 IconButton({ scope.launch { s.setReaderSize(size + 10) } }, enabled = size < 200) { Icon(Icons.Rounded.TextIncrease, stringResource(R.string.reader_larger)) }
                 IconButton({ scope.launch { s.setReaderSerif(!serif) } }) { Icon(Icons.Rounded.TextFields, stringResource(R.string.reader_font)) }
                 IconButton({ scope.launch { s.setReaderTheme((theme + 1) % 3) } }) {
-                    Icon(when (theme) { 0 -> Icons.Rounded.LightMode; 1 -> Icons.Rounded.Contrast; else -> Icons.Rounded.DarkMode }, stringResource(R.string.reader_theme), tint = MaterialTheme.colorScheme.primary)
+                    Icon(when (theme) { 0 -> Icons.Rounded.LightMode; 1 -> Icons.Rounded.Contrast; else -> Icons.Rounded.DarkMode }, stringResource(R.string.reader_theme), tint = barFg)
                 }
                 IconButton(onClose) { Icon(Icons.Rounded.Close, stringResource(R.string.reader_close)) }
             }

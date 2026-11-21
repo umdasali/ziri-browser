@@ -643,9 +643,22 @@
     <string name="pull_to_refresh">లాగి రిఫ్రెష్ చేయండి</string>
     <string name="pull_to_refresh_desc">పేజీ పైభాగంలో కిందికి లాగి మళ్లీ లోడ్ చేయండి</string>
     <string name="clear_on_exit">నిష్క్రమించేటప్పుడు తొలగించు</string>
-    <string name="clear_on_exit_desc">Ziri మూసిన ప్రతిసారీ తొలగించబడుతుంది (యాప్‌ను స్వైప్ చేసి మూసివేస్తే తదుపరి ప్రారంభంలో)</string>
+    <string name="clear_on_exit_desc">Ziri మూసినప్పుడు, వదిలిన సుమారు 5 నిమిషాల తర్వాత, లేదా తదుపరి ప్రారంభంలో తొలగించబడుతుంది.</string>
     <string name="search_tabs">ట్యాబ్‌లను వెతకండి</string>
     <string name="close_other_tabs">ఇతర ట్యాబ్‌లను మూసివేయండి</string>
     <string name="no_matching_tabs">సరిపోలే ట్యాబ్‌లు లేవు</string>
     <string name="print_page">ప్రింట్ / PDFగా సేవ్ చేయండి</string>
+    <string name="ask_ai">AIని అడగండి</string>
+    <string name="tor_shield_unavailable">Tor ట్యాబ్‌లు అజ్ఞాతంగా ఉండటానికి కొత్త Android System WebView అవసరం. Google Playలో అప్‌డేట్ చేసి మళ్లీ ప్రయత్నించండి.</string>
+    <string name="not_isolated_notice">ఈ ఫోన్ బ్రౌజర్ ఇంజిన్ ప్రైవేట్ ట్యాబ్‌ల కుకీలను సాధారణ ట్యాబ్‌ల నుండి వేరు చేయలేదు. Android System WebViewను అప్‌డేట్ చేయండి.</string>
+    <string name="requests_blocked_on_page">ఈ పేజీలో %d అభ్యర్థనలు బ్లాక్ చేయబడ్డాయి</string>
+    <string name="blocking_also_off">కొన్ని బ్లాకింగ్ సెట్టింగ్‌లలో కూడా ఆఫ్‌లో ఉన్నాయి.</string>
+    <string name="site_wants_to_use">%1$s మీ %2$sని ఉపయోగించాలనుకుంటోంది.</string>
+    <string name="perm_camera">కెమెరా</string>
+    <string name="perm_microphone">మైక్రోఫోన్</string>
+    <string name="perm_location">లొకేషన్</string>
+    <string name="no_https_notice">%s HTTPSకు మద్దతు ఇవ్వదు, కాబట్టి ఈ పేజీ సురక్షితం కాదు.</string>
+    <string name="tabs_open_count">%d తెరిచి ఉన్నాయి</string>
+    <string name="n_downloading">%d డౌన్‌లోడ్ అవుతున్నాయి</string>
+    <string name="could_harm_device">%s మీ పరికరానికి హాని కలిగించవచ్చు. నమ్మదగిన మూలాల ఫైల్‌లను మాత్రమే తెరవండి.</string>
 </resources>

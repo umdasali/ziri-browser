@@ -96,9 +96,11 @@ private data class FileItem(
     val name: String, val uri: Uri, val mime: String, val size: Long, val modified: Long,
     val isDir: Boolean = false, val docId: String? = null,
 ) {
-    val isVideo get() = mime.startsWith("video/")
-    val isAudio get() = mime.startsWith("audio/")
-    val isImage get() = mime.startsWith("image/")
+    // The extension counts too: a video stored as "application/octet-stream" is still a video.
+    private val category get() = FileUtils.categoryOf(name, mime)
+    val isVideo get() = !isDir && category == com.ziribrowser.download.Category.VIDEOS
+    val isAudio get() = !isDir && category == com.ziribrowser.download.Category.AUDIO
+    val isImage get() = !isDir && category == com.ziribrowser.download.Category.IMAGES
 }
 
 private sealed interface Where {
@@ -217,7 +219,7 @@ fun FilesScreen(container: AppContainer, onPlay: (Uri, String) -> Unit, onOpenVi
         } else {
             ZiriSearchField(query, { query = it }, stringResource(R.string.search_in, title))
             val list: List<FileItem>? = if (where == Where.ZiriDownloads) {
-                downloads.filter { it.status == com.ziribrowser.data.DownloadStatus.COMPLETED }.map {
+                downloads.filter { it.status == com.ziribrowser.data.DownloadStatus.COMPLETED && !it.isPrivate }.map {
                     FileItem(it.filename, Uri.parse(it.fileUri), it.mimeType, it.fileSize, it.createdAt)
                 }
             } else items
@@ -400,7 +402,12 @@ private fun queryFolder(context: Context, tree: Uri, docId: String): List<FileIt
 
 /** Removes the Downloads entry for a file that was deleted from the Files screen (no-op if it wasn't one of Ziri's downloads). */
 private suspend fun dropDownloadRow(container: AppContainer, uri: android.net.Uri) {
-    container.db.downloads().findByUri(uri.toString())?.let { container.downloads.remove(it.id) }
+    val dao = container.db.downloads()
+    // The same file has a different address in each MediaStore collection (…/downloads/12, …/video/media/12), but the id is shared,
+    // so a delete from the Videos / Images / Audio tiles still finds its Downloads entry.
+    val row = dao.findByUri(uri.toString())
+        ?: uri.takeIf { it.authority == "media" }?.lastPathSegment?.toLongOrNull()?.let { dao.findByUri("content://media/external/downloads/$it") }
+    row?.let { container.downloads.remove(it.id) }
 }
 
 private fun requestDelete(
@@ -422,11 +429,11 @@ private fun requestDelete(
 }
 
 private fun share(context: Context, f: FileItem) {
-    val send = Intent(Intent.ACTION_SEND).setType(f.mime.ifEmpty { "*/*" }).putExtra(Intent.EXTRA_STREAM, f.uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    val send = Intent(Intent.ACTION_SEND).setType(FileUtils.effectiveMime(f.name, f.mime).ifEmpty { "*/*" }).putExtra(Intent.EXTRA_STREAM, f.uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     runCatching { context.startActivity(Intent.createChooser(send, ziriString(R.string.share)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
 }
 
 private fun openExternally(context: Context, f: FileItem) {
-    val view = Intent(Intent.ACTION_VIEW).setDataAndType(f.uri, f.mime.ifEmpty { "*/*" }).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+    val view = Intent(Intent.ACTION_VIEW).setDataAndType(f.uri, FileUtils.effectiveMime(f.name, f.mime).ifEmpty { "*/*" }).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
     try { context.startActivity(view) } catch (_: ActivityNotFoundException) { Toast.makeText(context, context.getString(R.string.no_app_can_open_this_file), Toast.LENGTH_SHORT).show() }
 }

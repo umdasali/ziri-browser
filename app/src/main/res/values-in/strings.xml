@@ -640,9 +640,22 @@
     <string name="pull_to_refresh">Tarik untuk menyegarkan</string>
     <string name="pull_to_refresh_desc">Seret ke bawah di bagian atas halaman untuk memuat ulang</string>
     <string name="clear_on_exit">Hapus saat keluar</string>
-    <string name="clear_on_exit_desc">Dihapus setiap kali Ziri ditutup (atau saat dibuka berikutnya jika aplikasi digeser keluar)</string>
+    <string name="clear_on_exit_desc">Dihapus saat Ziri ditutup, sekitar 5 menit setelah ditinggalkan, atau pada pembukaan berikutnya.</string>
     <string name="search_tabs">Cari tab</string>
     <string name="close_other_tabs">Tutup tab lain</string>
     <string name="no_matching_tabs">Tidak ada tab yang cocok</string>
     <string name="print_page">Cetak / simpan sebagai PDF</string>
+    <string name="ask_ai">Tanya AI</string>
+    <string name="tor_shield_unavailable">Tab Tor memerlukan Android System WebView yang lebih baru agar tetap anonim. Perbarui di Google Play, lalu coba lagi.</string>
+    <string name="not_isolated_notice">Mesin browser ponsel ini tidak dapat memisahkan cookie tab pribadi dari tab biasa. Perbarui Android System WebView.</string>
+    <string name="requests_blocked_on_page">%d permintaan diblokir di halaman ini</string>
+    <string name="blocking_also_off">Sebagian pemblokiran juga nonaktif di Setelan.</string>
+    <string name="site_wants_to_use">%1$s ingin menggunakan %2$s Anda.</string>
+    <string name="perm_camera">kamera</string>
+    <string name="perm_microphone">mikrofon</string>
+    <string name="perm_location">lokasi</string>
+    <string name="no_https_notice">%s tidak mendukung HTTPS, sehingga halaman ini tidak aman.</string>
+    <string name="tabs_open_count">%d terbuka</string>
+    <string name="n_downloading">%d sedang diunduh</string>
+    <string name="could_harm_device">%s dapat membahayakan perangkat Anda. Buka hanya file dari sumber tepercaya.</string>
 </resources>

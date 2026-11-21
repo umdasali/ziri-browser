@@ -34,11 +34,13 @@ class RemoteImages(context: Context, private val http: OkHttpClient) {
                 if (!file.isFile) gate.withPermit { download(url, file) }
                 decode(file, maxWidth)?.also { memory.put(url, it) } ?: run { file.delete(); null }
             } catch (_: Exception) { file.delete(); null }
+            catch (_: OutOfMemoryError) { file.delete(); null } // a decompression bomb must cost one picture, not the app
         }
     }
 
     private fun download(url: String, out: File) {
-        val tmp = File(dir, out.name + ".tmp")
+        // A name of its own per attempt: two callers for the same address would otherwise write one file at the same time and corrupt it.
+        val tmp = File(dir, out.name + "." + java.util.UUID.randomUUID() + ".tmp")
         http.newCall(Request.Builder().url(url).header("User-Agent", "Mozilla/5.0 (Linux; Android 14) Chrome/124.0 Mobile Safari/537.36").build()).execute().use { r ->
             if (!r.isSuccessful) return
             var total = 0L
@@ -64,7 +66,10 @@ class RemoteImages(context: Context, private val http: OkHttpClient) {
         val b = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeFile(file.path, b)
         if (b.outWidth <= 0) return null
-        val o = BitmapFactory.Options().apply { inSampleSize = (b.outWidth / maxWidth).coerceAtLeast(1) }
+        // Sample by the larger side and by total pixels: width alone let a 700 x 60000 picture through at full size.
+        var sample = (maxOf(b.outWidth, b.outHeight) / maxWidth).coerceAtLeast(1)
+        while ((b.outWidth.toLong() / sample) * (b.outHeight.toLong() / sample) > MAX_PIXELS) sample *= 2
+        val o = BitmapFactory.Options().apply { inSampleSize = sample }
         return BitmapFactory.decodeFile(file.path, o)
     }
 
@@ -77,5 +82,5 @@ class RemoteImages(context: Context, private val http: OkHttpClient) {
 
     private fun sha(s: String) = MessageDigest.getInstance("SHA-1").digest(s.toByteArray()).joinToString("") { "%02x".format(it) }
 
-    private companion object { const val MAX_BYTES = 6L * 1024 * 1024; const val DISK_CAP = 40L * 1024 * 1024 }
+    private companion object { const val MAX_PIXELS = 4_000_000L; const val MAX_BYTES = 6L * 1024 * 1024; const val DISK_CAP = 40L * 1024 * 1024 }
 }

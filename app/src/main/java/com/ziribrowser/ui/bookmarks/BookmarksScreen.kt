@@ -80,7 +80,8 @@ fun BookmarksScreen(container: AppContainer, onOpenBrowser: () -> Unit) {
     val dao = container.db.bookmarks()
     val scope = rememberCoroutineScope()
     var query by remember { mutableStateOf("") }
-    val items by remember(query) { dao.search(UrlUtils.likeEscape(query)) }.collectAsStateWithLifecycle(emptyList())
+    val loaded by remember(query) { dao.search(UrlUtils.likeEscape(query)) }.collectAsStateWithLifecycle(null as List<BookmarkEntity>?)
+    val items = loaded ?: emptyList()
     var editing by remember { mutableStateOf<BookmarkEntity?>(null) }
     var menuOpen by remember { mutableStateOf(false) }
     var adding by remember { mutableStateOf(false) }
@@ -142,7 +143,7 @@ fun BookmarksScreen(container: AppContainer, onOpenBrowser: () -> Unit) {
             }
         }
         ZiriSearchField(query, { query = it }, stringResource(R.string.search_bookmarks))
-        if (items.isEmpty()) EmptyState(stringResource(R.string.no_bookmarks_yet), Icons.Rounded.Bookmark)
+        if (loaded != null && items.isEmpty()) EmptyState(stringResource(if (query.isNotBlank()) R.string.no_matches else R.string.no_bookmarks_yet), Icons.Rounded.Bookmark)
         LazyColumn(Modifier.weight(1f), contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = LocalBarClearance.current)) {
             items(items, key = { it.id }) { b ->
                 Row(
@@ -153,7 +154,7 @@ fun BookmarksScreen(container: AppContainer, onOpenBrowser: () -> Unit) {
                 ) {
                     com.ziribrowser.ui.SiteIcon(container, b.url, b.title.ifEmpty { b.url }, 40.dp, Modifier.padding(end = 12.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(b.title, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(b.title.ifEmpty { b.url }, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(
                             (if (b.folder.isNotEmpty()) "${b.folder} · " else "") + b.url, maxLines = 1,
                             overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant,

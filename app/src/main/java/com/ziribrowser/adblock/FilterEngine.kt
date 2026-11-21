@@ -38,7 +38,7 @@ class Rule(
     val domainsInclude: Array<String>?,
     val domainsExclude: Array<String>?,
 ) {
-    val segments: Array<String> by lazy(LazyThreadSafetyMode.NONE) { pattern.split('*').toTypedArray() }
+    val segments: Array<String> by lazy { pattern.split('*').toTypedArray() }
 }
 
 /** What is being asked about: a request URL, the page it came from, and what kind of resource it is. */

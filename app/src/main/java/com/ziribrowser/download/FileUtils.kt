@@ -21,8 +21,8 @@ object FileUtils {
     private val byExt: Map<String, Category> = buildMap {
         listOf("pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "csv", "epub", "rtf", "odt").forEach { put(it, Category.DOCUMENTS) }
         listOf("jpg", "jpeg", "png", "gif", "webp", "bmp", "heic", "svg").forEach { put(it, Category.IMAGES) }
-        listOf("mp4", "webm", "mkv", "mov", "avi", "3gp").forEach { put(it, Category.VIDEOS) }
-        listOf("mp3", "wav", "m4a", "ogg", "flac", "aac").forEach { put(it, Category.AUDIO) }
+        listOf("mp4", "m4v", "webm", "mkv", "mov", "avi", "3gp", "3g2", "ts", "m2ts", "mts", "flv", "f4v", "wmv", "asf", "mpg", "mpeg", "mpe", "ogv", "vob", "divx", "rm", "rmvb").forEach { put(it, Category.VIDEOS) }
+        listOf("mp3", "wav", "m4a", "ogg", "oga", "opus", "flac", "aac", "wma", "mka", "amr", "aiff", "aif", "mid", "midi", "ac3", "weba").forEach { put(it, Category.AUDIO) }
         listOf("zip", "rar", "7z", "gz", "tar", "bz2").forEach { put(it, Category.ARCHIVES) }
         put("apk", Category.APPS)
     }
@@ -45,7 +45,26 @@ object FileUtils {
             it == "application/vnd.android.package-archive" || it == "application/x-msdownload" || it == "application/x-sh" || it == "application/java-archive"
         }
 
+    /**
+     * The type to hand to a player or another app. Servers often label videos "application/octet-stream" (or nothing), and other apps
+     * then refuse them ("unable to play application/octet-stream"); for those the file name's extension gives the real type.
+     */
+    fun effectiveMime(name: String, mime: String): String {
+        val m = mime.lowercase(Locale.ROOT)
+        if (m.isNotEmpty() && m != "application/octet-stream" && m != "binary/octet-stream" && m != "application/force-download" && m != "application/x-download") return mime
+        val ext = extOf(name)
+        android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext)?.let { return it }
+        return when (byExt[ext]) {
+            Category.VIDEOS -> "video/*"
+            Category.AUDIO -> "audio/*"
+            Category.IMAGES -> "image/*"
+            else -> mime.ifEmpty { "application/octet-stream" }
+        }
+    }
+
     fun categoryOf(name: String, mime: String): Category {
+        // ".ts" is a transport-stream video far more often than TypeScript, but the type the server gave still decides when it says "text".
+        if (extOf(name) == "ts") return mime.lowercase(Locale.ROOT).let { if (it.startsWith("text/") || it.contains("typescript")) Category.DOCUMENTS else Category.VIDEOS }
         byExt[extOf(name)]?.let { return it }
         val m = mime.lowercase(Locale.ROOT)
         return when {
@@ -67,11 +86,29 @@ object FileUtils {
             .replace(Regex("\\.{2,}"), ".")
             .trim().trimStart('.').trimEnd('.', ' ')
         if (n.isEmpty()) return fallback
-        if (n.length > 120) {
-            val e = extOf(n)
-            n = n.take(120 - if (e.isEmpty()) 0 else e.length + 1) + if (e.isEmpty()) "" else ".$e"
+        // File systems allow 255 *bytes*, and one CJK / Arabic / emoji character is 2-4 of them; keep well under, and never split a character.
+        if (n.toByteArray(Charsets.UTF_8).size > 120) {
+            val e = extOf(n).take(12)
+            val room = 120 - if (e.isEmpty()) 0 else e.toByteArray(Charsets.UTF_8).size + 1
+            n = takeBytes(n.substringBeforeLast('.', n), room) + if (e.isEmpty()) "" else ".$e"
         }
-        return n
+        // Bidi controls could make "invoice.exe" display as "invoice.txt"-style spoofs.
+        n = n.replace(Regex("[\\u202a-\\u202e\\u2066-\\u2069]"), "")
+        return n.ifEmpty { fallback }
+    }
+
+    /** The longest start of [s] that fits in [max] UTF-8 bytes without cutting a character (or a surrogate pair) in half. */
+    fun takeBytes(s: String, max: Int): String {
+        var bytes = 0
+        var i = 0
+        while (i < s.length) {
+            val cp = s.codePointAt(i)
+            val size = String(Character.toChars(cp)).toByteArray(Charsets.UTF_8).size
+            if (bytes + size > max) break
+            bytes += size
+            i += Character.charCount(cp)
+        }
+        return s.substring(0, i)
     }
 
     fun formatBytes(n: Long): String {

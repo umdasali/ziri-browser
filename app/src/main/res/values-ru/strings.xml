@@ -649,9 +649,22 @@
     <string name="pull_to_refresh">Потяните для обновления</string>
     <string name="pull_to_refresh_desc">Потяните вниз в начале страницы, чтобы перезагрузить её</string>
     <string name="clear_on_exit">Очищать при выходе</string>
-    <string name="clear_on_exit_desc">Удаляется при каждом закрытии Ziri (или при следующем запуске, если приложение смахнули)</string>
+    <string name="clear_on_exit_desc">Удаляется при закрытии Ziri, примерно через 5 минут после выхода или при следующем запуске.</string>
     <string name="search_tabs">Поиск по вкладкам</string>
     <string name="close_other_tabs">Закрыть другие вкладки</string>
     <string name="no_matching_tabs">Нет подходящих вкладок</string>
     <string name="print_page">Печать / сохранить как PDF</string>
+    <string name="ask_ai">Спросить ИИ</string>
+    <string name="tor_shield_unavailable">Вкладкам Tor нужен более новый Android System WebView, чтобы оставаться анонимными. Обновите его в Google Play и повторите.</string>
+    <string name="not_isolated_notice">Движок браузера на этом телефоне не может разделить cookie приватных и обычных вкладок. Обновите Android System WebView.</string>
+    <string name="requests_blocked_on_page">Заблокировано запросов на этой странице: %d</string>
+    <string name="blocking_also_off">Часть блокировки также отключена в настройках.</string>
+    <string name="site_wants_to_use">%1$s хочет использовать ваш доступ: %2$s.</string>
+    <string name="perm_camera">камера</string>
+    <string name="perm_microphone">микрофон</string>
+    <string name="perm_location">геолокация</string>
+    <string name="no_https_notice">%s не поддерживает HTTPS, поэтому эта страница небезопасна.</string>
+    <string name="tabs_open_count">Открыто: %d</string>
+    <string name="n_downloading">Загружается: %d</string>
+    <string name="could_harm_device">%s может навредить вашему устройству. Открывайте только файлы из надёжных источников.</string>
 </resources>

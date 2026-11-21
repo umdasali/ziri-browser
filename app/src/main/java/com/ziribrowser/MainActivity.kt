@@ -9,6 +9,8 @@ import android.app.RemoteAction
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.ziribrowser.download.Category
+import com.ziribrowser.download.FileUtils
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.drawable.Icon
@@ -80,7 +82,8 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED
         ) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
 
-        if (savedInstanceState == null) handleIntent(intent)
+        // Coming back from the recents list re-delivers the intent that first launched the app; replaying it would reopen an old link as a new tab.
+        if (savedInstanceState == null && intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0) handleIntent(intent)
 
         container.enterPip = ::enterPip
         ContextCompat.registerReceiver(this, pipReceiver, IntentFilter(ACTION_PIP), ContextCompat.RECEIVER_NOT_EXPORTED)
@@ -119,8 +122,12 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
             val forcedDark by remember { container.forceDarkBars }.collectAsState()
             val dark = isDark(mode) || forcedDark
             // Private tab on screen: hide it from the recent-apps thumbnail and block screenshots.
-            DisposableEffect(forcedDark) {
-                if (forcedDark) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+            // Private and Tor page titles also appear on Home ("Continue browsing") and the tab grid, so while any such tab is open, so is the shield.
+            val openTabs by remember { container.tabs.tabs }.collectAsState()
+            val secret by remember { container.secureScreen }.collectAsState()
+            val secure = forcedDark || secret || openTabs.any { it.isPrivate }
+            DisposableEffect(secure) {
+                if (secure) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
                 else window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
                 onDispose {}
             }
@@ -175,7 +182,12 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
         // Window shape follows the video (clamped to what Android allows).
         val vs = pl?.videoSize
         val ratio = if (pl != null) {
-            if (vs != null && vs.width > 0 && vs.height > 0) (vs.width * vs.pixelWidthHeightRatio / vs.height).coerceIn(0.5f, 2.39f) else 16f / 9f
+            if (vs != null && vs.width > 0 && vs.height > 0) {
+                // A video stored sideways (rotation metadata) is shown turned, so its window is the other shape.
+                val turned = vs.unappliedRotationDegrees == 90 || vs.unappliedRotationDegrees == 270
+                val w = vs.width * vs.pixelWidthHeightRatio
+                (if (turned) vs.height / w else w / vs.height).coerceIn(0.5f, 2.39f)
+            } else 16f / 9f
         } else if (st.width > 0 && st.height > 0) (st.width.toFloat() / st.height).coerceIn(0.5f, 2.39f) else 16f / 9f
         val b = PictureInPictureParams.Builder()
             .setAspectRatio(Rational((ratio * 1000).toInt(), 1000))
@@ -211,12 +223,15 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
 
     override fun onStart() {
         super.onStart()
+        container.cancelClearOnExit()
         container.tabs.video.inBackground = false
         container.tabs.video.refresh()
     }
 
     override fun onStop() {
         super.onStop()
+        // Press Back on Android 12+ and the app just moves to the background: wipe after a quiet spell (not when it's only rotating or in a PiP window).
+        if (!isChangingConfigurations && !isInPictureInPictureMode) container.scheduleClearOnExit()
         // Keep tracking the video so the notification stays correct while the app is in the background.
         container.tabs.video.inBackground = true
         container.tabs.video.refresh()
@@ -227,6 +242,13 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
         if (isFinishing) container.scope.launch { runCatching { container.clearOnExit() } }
         runCatching { unregisterReceiver(pipReceiver) }
         container.enterPip = null
+        // The process outlives this activity: don't leave it holding the dead one, and answer anything still waiting on it.
+        if (!isChangingConfigurations) {
+            container.tabs.fileChooser = null
+            container.tabs.osPermissionRequester = null
+        }
+        pendingChooser?.onReceiveValue(null); pendingChooser = null
+        pendingPermission?.invoke(false); pendingPermission = null
         super.onDestroy()
     }
 
@@ -237,8 +259,11 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
 
     private fun handleIntent(intent: Intent?) {
         if (intent == null) return
-        if (intent.getBooleanExtra(EXTRA_OPEN_DOWNLOADS, false)) container.navigate("downloads")
-        intent.getLongExtra(EXTRA_VIEW_DOWNLOAD, -1L).takeIf { it >= 0 }?.let { container.navigate("viewer/$it") }
+        // Only Ziri's own notifications carry the token; another app can't steer Ziri into a download (private ones included).
+        if (intent.getStringExtra(EXTRA_TOKEN) == IntentToken.get(this)) {
+            if (intent.getBooleanExtra(EXTRA_OPEN_DOWNLOADS, false)) container.navigate("downloads")
+            intent.getLongExtra(EXTRA_VIEW_DOWNLOAD, -1L).takeIf { it >= 0 }?.let { container.navigate("viewer/$it") }
+        }
         val data = intent.data?.toString()
         if (intent.action == Intent.ACTION_VIEW && UrlUtils.isHttp(data)) {
             container.tabs.openTab(data)
@@ -247,15 +272,25 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
         // A video or audio file shared from another app or a file manager opens in Ziri's player.
         val type = intent.type.orEmpty()
         val media = intent.data
-        if (intent.action == Intent.ACTION_VIEW && media != null && media.scheme == "content" && (type.startsWith("video/") || type.startsWith("audio/"))) {
-            val name = runCatching {
-                contentResolver.query(media, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
-            }.getOrNull() ?: media.lastPathSegment.orEmpty()
-            container.navigate("play/${Uri.encode(media.toString())}?title=${Uri.encode(name)}")
+        if (intent.action == Intent.ACTION_VIEW && media != null && media.scheme == "content") {
+            // The file's name comes from another app's provider, which can be slow (cloud, USB): ask off the main thread.
+            lifecycleScope.launch {
+                val name = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    runCatching {
+                        contentResolver.query(media, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
+                    }.getOrNull()
+                } ?: media.lastPathSegment.orEmpty()
+                // Files handed over as "application/octet-stream" (or with no type) are judged by their extension.
+                val cat = FileUtils.categoryOf(name, type)
+                if (type.startsWith("video/") || type.startsWith("audio/") || cat == Category.VIDEOS || cat == Category.AUDIO) {
+                    container.navigate("play/${Uri.encode(media.toString())}?title=${Uri.encode(name)}")
+                }
+            }
         }
     }
 
     companion object {
+        const val EXTRA_TOKEN = "ziri_token"
         const val EXTRA_OPEN_DOWNLOADS = "open_downloads"
         const val EXTRA_VIEW_DOWNLOAD = "view_download"
         private const val ACTION_PIP = "com.ziribrowser.PIP_CONTROL"

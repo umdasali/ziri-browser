@@ -19,21 +19,21 @@ object UrlUtils {
         return engine.queryUrl + encodeQuery(text)
     }
 
-    private val privateIpRegex = Regex("^(10\\.|127\\.|192\\.168\\.|169\\.254\\.|172\\.(1[6-9]|2\\d|3[01])\\.)")
     private val ipv4Regex = Regex("^\\d{1,3}(\\.\\d{1,3}){3}$")
 
     /** Host name exactly as written in [url] (no "www." stripping), or empty when it can't be parsed. */
     fun rawHost(url: String): String =
         // java.net.URI refuses addresses with characters like | { } ^ or a space and then reports no host; a page must not
         // slip past HTTPS-only / HTTPS-first that way, so fall back to reading the host by hand.
-        runCatching { URI(url).host }.getOrNull()?.takeIf { it.isNotEmpty() }
-            ?: url.substringAfter("://", "").substringBefore('/').substringBefore('?').substringBefore('#').substringAfterLast('@').substringBefore(':')
+        // Chromium reads a backslash as a slash in http(s) addresses ("http://evil.com\\@10.0.0.1" is evil.com), so do the same here.
+        url.replace('\\', '/').let { u -> runCatching { URI(u).host }.getOrNull()?.takeIf { it.isNotEmpty() }
+            ?: u.substringAfter("://", "").substringBefore('/').substringBefore('?').substringBefore('#').substringAfterLast('@').substringBefore(':') }
 
     /** True for addresses that never have a public HTTPS certificate: localhost, LAN names and IP addresses. */
     fun isLocalHost(host: String): Boolean {
         val h = host.lowercase().trim('[', ']')
         return h == "localhost" || h.endsWith(".local") || h.endsWith(".lan") || h.endsWith(".internal") ||
-            ipv4Regex.matches(h) || privateIpRegex.containsMatchIn(h) || h.contains(':') // IPv6 literal
+            ipv4Regex.matches(h) || h.contains(':') // IPv6 literal
     }
 
     /**

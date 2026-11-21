@@ -56,7 +56,7 @@ class DownloadService : Service() {
     /** Android 15+ ends long "data sync" services after about 6 hours: pause cleanly instead of being killed. */
     override fun onTimeout(startId: Int, fgsType: Int) {
         val engine = (application as ZiriApp).container.downloads
-        scope.launch { engine.pauseAll(); stopSelf() }
+        scope.launch { try { engine.pauseAll() } finally { stopSelf() } }
     }
 
     override fun onDestroy() {

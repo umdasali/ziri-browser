@@ -643,9 +643,22 @@
     <string name="pull_to_refresh">இழுத்து புதுப்பி</string>
     <string name="pull_to_refresh_desc">பக்கத்தின் மேலே கீழ்நோக்கி இழுத்து மீண்டும் ஏற்றவும்</string>
     <string name="clear_on_exit">வெளியேறும்போது அழி</string>
-    <string name="clear_on_exit_desc">Ziri-ஐ மூடும் ஒவ்வொரு முறையும் நீக்கப்படும் (ஆப் ஸ்வைப் செய்து மூடப்பட்டால் அடுத்த தொடக்கத்தில்)</string>
+    <string name="clear_on_exit_desc">Ziri-ஐ மூடும்போது, வெளியேறி சுமார் 5 நிமிடங்களுக்குப் பிறகு, அல்லது அடுத்த தொடக்கத்தில் நீக்கப்படும்.</string>
     <string name="search_tabs">தாவல்களைத் தேடு</string>
     <string name="close_other_tabs">மற்ற தாவல்களை மூடு</string>
     <string name="no_matching_tabs">பொருந்தும் தாவல் இல்லை</string>
     <string name="print_page">அச்சிடு / PDF ஆக சேமி</string>
+    <string name="ask_ai">AI-யிடம் கேளுங்கள்</string>
+    <string name="tor_shield_unavailable">Tor தாவல்கள் அநாமதேயமாக இருக்க புதிய Android System WebView தேவை. Google Play-இல் புதுப்பித்து மீண்டும் முயலவும்.</string>
+    <string name="not_isolated_notice">இந்த தொலைபேசியின் உலாவி இயந்திரம் தனிப்பட்ட தாவல்களின் குக்கீகளை சாதாரண தாவல்களிலிருந்து பிரித்து வைக்க முடியாது. Android System WebView ஐ புதுப்பிக்கவும்.</string>
+    <string name="requests_blocked_on_page">இந்தப் பக்கத்தில் %d கோரிக்கைகள் தடுக்கப்பட்டன</string>
+    <string name="blocking_also_off">சில தடுப்பு அமைப்புகளிலும் அணைக்கப்பட்டுள்ளது.</string>
+    <string name="site_wants_to_use">%1$s உங்கள் %2$s-ஐப் பயன்படுத்த விரும்புகிறது.</string>
+    <string name="perm_camera">கேமரா</string>
+    <string name="perm_microphone">மைக்ரோஃபோன்</string>
+    <string name="perm_location">இருப்பிடம்</string>
+    <string name="no_https_notice">%s HTTPS-ஐ ஆதரிக்கவில்லை, எனவே இந்தப் பக்கம் பாதுகாப்பானது அல்ல.</string>
+    <string name="tabs_open_count">%d திறந்துள்ளன</string>
+    <string name="n_downloading">%d பதிவிறக்கப்படுகின்றன</string>
+    <string name="could_harm_device">%s உங்கள் சாதனத்திற்குத் தீங்கு விளைவிக்கலாம். நம்பகமான மூலங்களின் கோப்புகளை மட்டும் திறக்கவும்.</string>
 </resources>

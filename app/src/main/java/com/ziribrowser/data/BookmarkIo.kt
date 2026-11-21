@@ -26,7 +26,8 @@ object BookmarkIo {
         "<DT><A HREF=\"${escape(b.url)}\" ADD_DATE=\"${b.createdAt / 1000}\">${escape(b.title.ifEmpty { b.url })}</A>"
 
     private val tokenRegex = Regex(
-        "<H3[^>]*>(.*?)</H3>|<A\\s[^>]*?HREF\\s*=\\s*(?:\"([^\"]*)\"|'([^']*)')[^>]*>(.*?)</A>|</DL>",
+        // Bounded lengths: an untrusted file of unclosed tags made the unbounded version re-scan to the end for every one (quadratic time).
+        "<H3[^>]{0,500}>(.{0,500}?)</H3>|<A\\s[^>]{0,3000}?HREF\\s*=\\s*(?:\"([^\"]{0,4000})\"|'([^']{0,4000})')[^>]{0,3000}>(.{0,1000}?)</A>|</DL>",
         setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL),
     )
 
@@ -55,5 +56,12 @@ object BookmarkIo {
     }
 
     private fun escape(s: String) = s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
-    private fun unescape(s: String) = s.replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&#39;", "'").replace("&amp;", "&")
+    private val numericEntity = Regex("&#(x[0-9a-fA-F]{1,6}|[0-9]{1,7});")
+    private fun unescape(s: String) = s
+        .replace(numericEntity) { m ->
+            val v = m.groupValues[1]
+            val cp = (if (v.startsWith("x")) v.drop(1).toIntOrNull(16) else v.toIntOrNull())?.takeIf { it in 1..0x10FFFF }
+            cp?.let { String(Character.toChars(it)) } ?: m.value
+        }
+        .replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&apos;", "'").replace("&amp;", "&")
 }

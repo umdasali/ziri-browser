@@ -37,11 +37,17 @@ object HlsDownloader {
             body.string()
         }
 
+    private const val MAX_SEGMENT = 48L * 1024 * 1024
+
     /** Downloads one segment, decrypting it if the playlist says it is AES-128 encrypted. */
     suspend fun fetchSegment(client: OkHttpClient, seg: HlsSegment, headers: Headers, keys: MutableMap<String, ByteArray>): ByteArray {
         val bytes = client.newCall(Request.Builder().url(seg.url).headers(headers).build()).await().use { resp ->
             if (!resp.isSuccessful) throw IOException("A video segment failed (HTTP ${resp.code}).")
-            resp.body.bytes()
+            // A hostile or broken server must not be able to fill memory with one "segment" (four are in flight at a time).
+            val src = resp.body.source()
+            src.request(MAX_SEGMENT + 1)
+            if (src.buffer.size > MAX_SEGMENT) throw IOException("A video segment is too large.")
+            src.readByteArray()
         }
         val key = seg.key ?: return bytes
         val keyBytes = synchronized(keys) { keys[key.keyUrl] }

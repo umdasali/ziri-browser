@@ -109,14 +109,14 @@ class SettingsRepository(private val context: Context) {
      * frame would use default colours and flash before the saved theme appears.
      */
     private val boot = context.getSharedPreferences("boot_theme", Context.MODE_PRIVATE)
-    fun bootMode(): ThemeMode = boot.getString("mode", null).toEnum(ThemeMode.SYSTEM)
+    fun bootMode(): ThemeMode = boot.getString("mode", null).toEnum(ThemeMode.LIGHT)
     fun bootAmoled(): Boolean = boot.getBoolean("amoled", false)
     fun bootColor(): ThemeColor = boot.getString("color", null).toEnum(ThemeColor.TEAL)
 
     private inline fun <reified E : Enum<E>> String?.toEnum(default: E): E =
         this?.let { s -> runCatching { enumValueOf<E>(s) }.getOrNull() } ?: default
 
-    val themeMode: Flow<ThemeMode> = context.dataStore.data.map { it[themeKey].toEnum(ThemeMode.SYSTEM) }
+    val themeMode: Flow<ThemeMode> = context.dataStore.data.map { it[themeKey].toEnum(ThemeMode.LIGHT) }
     val themeColor: Flow<ThemeColor> = context.dataStore.data.map { it[colorKey].toEnum(ThemeColor.TEAL) }
     val appFont: Flow<AppFont> = context.dataStore.data.map { it[fontKey].toEnum(AppFont.DEFAULT) }
     val textSize: Flow<TextSize> = context.dataStore.data.map { it[textSizeKey].toEnum(TextSize.DEFAULT) }
@@ -336,6 +336,9 @@ class SettingsRepository(private val context: Context) {
 
     // ---- remembered video positions: page URL -> seconds, newest 60 kept ---------------------------
     private val videoPosKey = stringPreferencesKey("video_positions")
+
+    /** Forgets where each web video was left off; these entries hold page addresses, so they go with the history. */
+    suspend fun clearVideoPositions() { context.dataStore.edit { it.remove(videoPosKey) } }
 
     suspend fun videoPosition(pageKey: String): Double? {
         val arr = runCatching { JSONArray(context.dataStore.data.first()[videoPosKey] ?: "[]") }.getOrNull() ?: return null

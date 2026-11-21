@@ -267,15 +267,16 @@ internal fun fmt(ms: Long): String {
 internal fun SeekPreview(item: PlayItem?, fraction: Float?, durationMs: Long) {
     val context = LocalContext.current
     if (item == null || item.downloadId != null || durationMs <= 0) return
-    val retriever = remember(item.uri) {
-        runCatching { android.media.MediaMetadataRetriever().apply { setDataSource(context, item.uri) } }.getOrNull()
-    }
-    DisposableEffect(retriever) { onDispose { runCatching { retriever?.release() } } }
+    if (item.mime?.startsWith("audio/") == true) return
+    // Opened only when the bar is first dragged, and off the main thread: setDataSource can take a long time on slow storage.
+    var retriever by remember(item.uri) { mutableStateOf<android.media.MediaMetadataRetriever?>(null) }
+    DisposableEffect(item.uri) { onDispose { runCatching { retriever?.release() } } }
     var frame by remember(item.uri) { mutableStateOf<android.graphics.Bitmap?>(null) }
     LaunchedEffect(fraction) {
         val f = fraction ?: return@LaunchedEffect
         delay(120) // wait for the finger to settle so we don't decode on every pixel
         frame = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            if (retriever == null) retriever = runCatching { android.media.MediaMetadataRetriever().apply { setDataSource(context, item.uri) } }.getOrNull()
             runCatching {
                 retriever?.getScaledFrameAtTime((f * durationMs * 1000).toLong(), android.media.MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 320, 180)
             }.getOrNull()
@@ -299,6 +300,8 @@ internal fun stepFrame(player: androidx.media3.exoplayer.ExoPlayer, direction: I
     val fps = player.videoFormat?.frameRate?.takeIf { it > 0 } ?: 25f
     player.setSeekParameters(androidx.media3.exoplayer.SeekParameters.EXACT)
     player.seekTo((player.currentPosition + direction * (1000f / fps).toLong().coerceAtLeast(1)).coerceAtLeast(0))
+    // Exact seeking only for this step; every other seek goes back to the fast keyframe kind.
+    player.setSeekParameters(androidx.media3.exoplayer.SeekParameters.DEFAULT)
 }
 
 /** Volume boost above 100%, equaliser presets and bass boost. */

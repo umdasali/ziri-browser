@@ -104,7 +104,7 @@ fun ZiriNavHost(container: AppContainer) {
 
     fun openBrowser() = nav.navigate("browser") { popUpTo("home"); launchSingleTop = true }
 
-    val onboardingDone by container.settings.onboardingDone.collectAsStateWithLifecycle(true)
+    val onboardingDone by container.onboardingDone.collectAsStateWithLifecycle(true)
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     val showBar = onboardingDone && route != null && route != "browser" && route?.startsWith("viewer") != true && route?.startsWith("play") != true
     val hazeState = rememberHazeState()
@@ -172,7 +172,10 @@ fun ZiriNavHost(container: AppContainer) {
                             val uri = android.net.Uri.parse(backStack.arguments?.getString("uri").orEmpty())
                             val name = backStack.arguments?.getString("title").orEmpty().ifEmpty { uri.lastPathSegment.orEmpty() }
                             val queue = remember(uri) {
-                                container.pendingQueue?.takeIf { q -> q.items.any { it.uri == uri } }?.let { q -> q.copy(start = q.items.indexOfFirst { it.uri == uri }.coerceAtLeast(0)) }
+                                // The folder's list belongs to the tap that set it; consume it so a later "open with Ziri" of a file in that folder doesn't inherit it.
+                                val pending = container.pendingQueue
+                                container.pendingQueue = null
+                                pending?.takeIf { q -> q.items.any { it.uri == uri } }?.let { q -> q.copy(start = q.items.indexOfFirst { it.uri == uri }.coerceAtLeast(0)) }
                                     ?: com.ziribrowser.ui.viewer.PlayQueue(listOf(com.ziribrowser.ui.viewer.PlayItem(uri, name, "local:$uri")))
                             }
                             MxPlayer(container, queue, onBack = back)

@@ -48,7 +48,8 @@ import kotlinx.coroutines.withContext
 @Composable
 fun ImageViewer(container: AppContainer, d: DownloadEntity, live: LiveProgress?, onBack: () -> Unit) {
     if (d.status != DownloadStatus.COMPLETED) { WaitingForDownload(d, live, onBack); return }
-    val all by remember { container.db.downloads().observeImages() }.collectAsStateWithLifecycle(emptyList())
+    val every by remember { container.db.downloads().observeImages() }.collectAsStateWithLifecycle(emptyList())
+    val all = every.filter { it.isPrivate == d.isPrivate } // swiping never crosses between private and normal pictures
     val images = if (all.any { it.id == d.id }) all else listOf(d) + all
     val start = images.indexOfFirst { it.id == d.id }.coerceAtLeast(0)
     val pager = rememberPagerState(initialPage = start) { images.size }
@@ -73,7 +74,11 @@ fun ImageViewer(container: AppContainer, d: DownloadEntity, live: LiveProgress?,
 @Composable
 private fun ZoomableImage(uri: Uri, onZoomChange: (Boolean) -> Unit) {
     val context = LocalContext.current
-    val bitmap by produceState<ImageBitmap?>(null, uri) { value = withContext(Dispatchers.IO) { decodeSampled(context, uri, 2600) } }
+    var failed by remember(uri) { mutableStateOf(false) }
+    val bitmap by produceState<ImageBitmap?>(null, uri) {
+        value = withContext(Dispatchers.IO) { decodeSampled(context, uri, 2600) }
+        if (value == null) failed = true // e.g. an SVG or a damaged file: say so instead of spinning forever
+    }
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
     LaunchedEffect(scale) { onZoomChange(scale > 1.02f) }
@@ -108,7 +113,8 @@ private fun ZoomableImage(uri: Uri, onZoomChange: (Boolean) -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         val bmp = bitmap
-        if (bmp == null) CircularProgressIndicator(color = Color.White)
+        if (bmp == null && failed) androidx.compose.material3.Text(androidx.compose.ui.res.stringResource(com.ziribrowser.R.string.can_t_open_the_file), color = Color.White)
+        else if (bmp == null) CircularProgressIndicator(color = Color.White)
         else Image(
             bmp, null,
             Modifier.fillMaxSize().graphicsLayer(scaleX = scale, scaleY = scale, translationX = offset.x, translationY = offset.y),

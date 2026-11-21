@@ -150,6 +150,18 @@ class FeedRepository(context: Context, private val http: OkHttpClient, private v
                         out += Article(t, l, img?.let { MetaParser.resolve(l, MetaParser.unescape(it)) }, source, date, interest)
                     }
                 }
+                // nextText() throws if a title or summary contains child tags (XHTML), which dropped the rest of the feed: read the text and skip the tags.
+                fun text(): String {
+                    val sb = StringBuilder(); var depth = 1
+                    while (depth > 0) when (p.next()) {
+                        XmlPullParser.TEXT, XmlPullParser.CDSECT, XmlPullParser.ENTITY_REF -> if (depth == 1) sb.append(p.text)
+                        XmlPullParser.START_TAG -> depth++
+                        XmlPullParser.END_TAG -> depth--
+                        XmlPullParser.END_DOCUMENT -> return sb.toString()
+                    }
+                    return sb.toString()
+                }
+                fun skipTree() { var depth = 1; while (depth > 0) when (p.next()) { XmlPullParser.START_TAG -> depth++; XmlPullParser.END_TAG -> depth--; XmlPullParser.END_DOCUMENT -> return } }
                 while (true) {
                     when (p.next()) {
                         XmlPullParser.END_DOCUMENT -> break
@@ -157,17 +169,18 @@ class FeedRepository(context: Context, private val http: OkHttpClient, private v
                             val n = p.name
                             if (n == "item" || n == "entry") { inItem = true; title = ""; link = ""; image = null; date = 0L; html = "" }
                             else if (inItem) when (n) {
-                                "title" -> title = p.nextText()
+                                "source" -> skipTree() // an aggregated feed's own title and link, not this entry's
+                                "title" -> title = text()
                                 "link" -> { val href = p.getAttributeValue(null, "href"); val rel = p.getAttributeValue(null, "rel")
-                                    if (href != null) { if (rel == null || rel == "alternate") link = href; p.nextTag().let { } } else link = p.nextText().trim() }
-                                "pubDate", "published", "updated", "dc:date" -> if (date == 0L) date = parseDate(p.nextText())
+                                    if (href != null) { if (rel == null || rel == "alternate") link = href; p.nextTag().let { } } else link = text().trim() }
+                                "pubDate", "published", "updated", "dc:date" -> { val t = text(); if (date == 0L) date = parseDate(t) }
                                 "media:thumbnail" -> if (image == null) image = p.getAttributeValue(null, "url")
                                 "media:content" -> {
                                     val u = p.getAttributeValue(null, "url"); val medium = p.getAttributeValue(null, "medium"); val type = p.getAttributeValue(null, "type").orEmpty()
                                     if (image == null && u != null && (medium == "image" || type.startsWith("image") || u.substringBefore('?').lowercase().let { it.endsWith(".jpg") || it.endsWith(".jpeg") || it.endsWith(".png") || it.endsWith(".webp") })) image = u
                                 }
                                 "enclosure" -> if (image == null && p.getAttributeValue(null, "type").orEmpty().startsWith("image")) image = p.getAttributeValue(null, "url")
-                                "description", "content:encoded", "summary", "content" -> html += p.nextText()
+                                "description", "content:encoded", "summary", "content" -> html += text()
                             }
                         }
                         XmlPullParser.END_TAG -> if (inItem && (p.name == "item" || p.name == "entry")) { inItem = false; finish() }
